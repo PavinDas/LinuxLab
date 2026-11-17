@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  
+  <!-- Strict Content Security Policy for GitHub Pages Static Deployment -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; object-src 'none';">
+  
+  <meta name="description" content="CyberLinux - Interactive browser-based Linux desktop simulator designed for cybersecurity education, ethical hacking, and terminal command mastery.">
+  <meta name="theme-color" content="#0f172a">
+  <title>CyberLinux - Cybersecurity Desktop Simulator</title>
+
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="./css/main.css">
+  <link rel="stylesheet" href="./css/desktop.css">
+  <link rel="stylesheet" href="./css/panel.css">
+  <link rel="stylesheet" href="./css/dock.css">
+  <link rel="stylesheet" href="./css/launcher.css">
+  <link rel="stylesheet" href="./css/windows.css">
+  <link rel="stylesheet" href="./css/terminal.css">
+  <link rel="stylesheet" href="./css/applications.css">
+  <link rel="stylesheet" href="./css/responsive.css">
+  <link rel="stylesheet" href="./css/marshmallow.css">
+
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🐼</text></svg>">
+</head>
+<body class="dark-theme">
+
+  <!-- GNOME Top System Panel -->
+  <header id="top-panel" role="banner"></header>
+
+  <!-- Main Desktop Canvas -->
+  <main id="desktop" role="main">
+    <!-- Animated Desktop Wallpaper Layer -->
+    <div id="desktop-wallpaper" class="desktop-wallpaper wp-mascot"></div>
+
+    <!-- Desktop Icons Container -->
+    <div id="desktop-icons" class="desktop-icons-container"></div>
+  </main>
+
+  <!-- GNOME Floating Dock (Dash) -->
+  <nav id="dock" role="navigation" aria-label="Applications Dock"></nav>
+
+  <!-- GNOME Application Overview / Launcher Overlay -->
+  <div id="launcher-overlay" class="launcher-overlay hidden" role="dialog" aria-modal="true" aria-label="Application Launcher"></div>
+
+  <!-- Toast Notification Container -->
+  <div id="notifications-container" aria-live="polite" aria-atomic="true"></div>
+
+  <!-- Main Application Entrypoint -->
+  <script type="module" src="./js/app.js"></script>
+</body>
+</html>

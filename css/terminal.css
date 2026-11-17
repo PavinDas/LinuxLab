@@ -1,0 +1,130 @@
+/**
+ * Terminal Interface Styling
+ */
+.terminal-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  font-family: var(--font-mono);
+  background-color: #0b0f19;
+  color: #22c55e;
+  font-size: 15px;
+}
+
+/* Themes */
+.terminal-container.theme-cyber-green {
+  background-color: #0d1117;
+  color: #22c55e;
+}
+
+.terminal-container.theme-gnome-dark {
+  background-color: #1e1e2e;
+  color: #cdd6f4;
+}
+
+.terminal-container.theme-matrix {
+  background-color: #020603;
+  color: #10b981;
+}
+
+.terminal-container.theme-hacker-amber {
+  background-color: #140b02;
+  color: #f59e0b;
+}
+
+/* Toolbar */
+.terminal-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  background-color: rgba(0, 0, 0, 0.35);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  font-family: var(--font-sans);
+  font-size: 12px;
+}
+
+.term-select {
+  padding: 3px 8px;
+  border-radius: 6px;
+  background-color: rgba(255, 255, 255, 0.1);
+  color: #e2e8f0;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  font-size: 11px;
+}
+
+.term-btn {
+  padding: 3px 8px;
+  border-radius: 6px;
+  background-color: rgba(255, 255, 255, 0.08);
+  color: #e2e8f0;
+  font-size: 11px;
+  transition: background-color 0.15s ease;
+}
+
+.term-btn:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+/* Terminal Screen */
+.terminal-screen {
+  flex: 1;
+  overflow-y: auto;
+  padding: 14px 16px;
+  line-height: 1.5;
+  user-select: text;
+}
+
+.term-banner {
+  color: #38bdf8;
+  margin-bottom: 12px;
+  white-space: pre-wrap;
+}
+
+.term-echo-line {
+  color: #94a3b8;
+  margin-top: 6px;
+  margin-bottom: 2px;
+}
+
+.term-stdout {
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.term-stderr {
+  color: #f43f5e;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.term-suggestions {
+  color: #fbbf24;
+  margin: 4px 0;
+  white-space: pre-wrap;
+}
+
+/* Prompt Line */
+.terminal-input-line {
+  display: flex;
+  align-items: center;
+  margin-top: 4px;
+}
+
+.terminal-prompt {
+  font-weight: 600;
+  color: #10b981;
+  white-space: nowrap;
+  margin-right: 6px;
+}
+
+.terminal-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: inherit;
+  font-family: inherit;
+  font-size: inherit;
+  caret-color: #22c55e;
+}

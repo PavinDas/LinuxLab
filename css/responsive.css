@@ -1,0 +1,96 @@
+/**
+ * Responsive Design Adaptations
+ * Adapts desktop into simplified mobile view on smaller screens (<= 768px).
+ */
+@media (max-width: 768px) {
+  /* Dock scaling */
+  #dock {
+    bottom: 6px;
+    width: 95%;
+    max-width: 440px;
+  }
+
+  .dock-inner {
+    padding: 6px 10px;
+    gap: 4px;
+    overflow-x: auto;
+    justify-content: center;
+  }
+
+  .dock-item {
+    width: 40px;
+    height: 40px;
+  }
+
+  .dock-icon {
+    font-size: 20px;
+  }
+
+  /* Force open windows to adapt to mobile bounds */
+  .desktop-window {
+    width: 100% !important;
+    height: calc(100% - 32px) !important;
+    left: 0 !important;
+    top: 32px !important;
+    border-radius: 0 !important;
+    border: none !important;
+  }
+
+  .window-resize-handle {
+    display: none;
+  }
+
+  /* File manager 1-column on mobile */
+  .fm-sidebar {
+    display: none;
+  }
+
+  .fm-topbar {
+    flex-wrap: wrap;
+  }
+
+  .fm-search-input {
+    width: 100px;
+  }
+
+  /* Learning Lab 1-column on mobile */
+  .roadmap-layout {
+    flex-direction: column;
+  }
+
+  .lesson-list-col {
+    width: 100%;
+    max-height: 180px;
+    border-right: none;
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  /* Command Reference 1-column on mobile */
+  .cmdref-layout {
+    flex-direction: column;
+  }
+
+  .cmdref-list-col {
+    width: 100%;
+    max-height: 160px;
+    border-right: none;
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  /* Settings 1-column on mobile */
+  .settings-container {
+    flex-direction: column;
+  }
+
+  .settings-sidebar {
+    width: 100%;
+    border-right: none;
+    border-bottom: 1px solid var(--border-color);
+    flex-direction: row;
+    overflow-x: auto;
+  }
+
+  .settings-nav-item {
+    white-space: nowrap;
+  }
+}

@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>CyberLinux Automated Test Suite</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, monospace;
+      background: #0f172a;
+      color: #f8fafc;
+      padding: 30px;
+      line-height: 1.6;
+    }
+    h1 {
+      color: #10b981;
+      font-size: 24px;
+      margin-bottom: 8px;
+    }
+    .summary-card {
+      background: #1e293b;
+      padding: 16px 20px;
+      border-radius: 12px;
+      margin-bottom: 24px;
+      display: inline-block;
+      border: 1px solid #334155;
+    }
+    .suite-header {
+      color: #38bdf8;
+      margin-top: 20px;
+      margin-bottom: 8px;
+      font-size: 18px;
+      border-bottom: 1px solid #334155;
+      padding-bottom: 4px;
+    }
+    .test-line {
+      padding: 4px 12px;
+      border-radius: 6px;
+      margin-bottom: 4px;
+      font-size: 14px;
+    }
+    .pass {
+      color: #22c55e;
+      background: rgba(34, 197, 94, 0.1);
+    }
+    .fail {
+      color: #f43f5e;
+      background: rgba(244, 63, 94, 0.15);
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <h1>🐼 CyberLinux Quality Assurance & Security Test Suite</h1>
+  <div id="summary" class="summary-card">Running tests...</div>
+  <div id="results"></div>
+
+  <script type="module">
+    import { runner } from './test-framework.js';
+    import './filesystem-tests.js';
+    import './terminal-tests.js';
+    import './security-tests.js';
+    import './application-tests.js';
+
+    const resultsEl = document.getElementById('results');
+    const summaryEl = document.getElementById('summary');
+
+    runner.run((event) => {
+      if (event.type === 'suite-start') {
+        const h = document.createElement('div');
+        h.className = 'suite-header';
+        h.textContent = event.name;
+        resultsEl.appendChild(h);
+      } else if (event.type === 'test-pass') {
+        const line = document.createElement('div');
+        line.className = 'test-line pass';
+        line.textContent = `✔ ${event.description}`;
+        resultsEl.appendChild(line);
+      } else if (event.type === 'test-fail') {
+        const line = document.createElement('div');
+        line.className = 'test-line fail';
+        line.textContent = `✘ ${event.description} - Error: ${event.error}`;
+        resultsEl.appendChild(line);
+      } else if (event.type === 'summary') {
+        const s = event.summary;
+        summaryEl.innerHTML = `
+          <strong>Total Tests:</strong> ${s.total} | 
+          <span style="color:#22c55e"><strong>Passed:</strong> ${s.passed}</span> | 
+          <span style="color:${s.failed > 0 ? '#f43f5e' : '#94a3b8'}"><strong>Failed:</strong> ${s.failed}</span>
+        `;
+      }
+    });
+  </script>
+</body>
+</html>

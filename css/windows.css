@@ -1,0 +1,123 @@
+/**
+ * Desktop Window Manager Styling
+ */
+.desktop-window {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--win-radius);
+  box-shadow: var(--win-shadow);
+  overflow: hidden;
+  transition: box-shadow 0.2s ease;
+}
+
+.desktop-window.active {
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.24), 0 0 0 1px var(--accent-green);
+}
+
+.desktop-window.maximized {
+  border-radius: 0;
+  border-left: none;
+  border-right: none;
+}
+
+.window-titlebar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 42px;
+  background-color: var(--win-titlebar-bg);
+  border-bottom: 1px solid var(--border-color);
+  padding: 0 16px;
+  cursor: grab;
+}
+
+.desktop-window.is-dragging .window-titlebar {
+  cursor: grabbing;
+}
+
+.titlebar-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.window-icon {
+  font-size: 18px;
+}
+
+.window-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.window-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.win-btn {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: bold;
+  color: #334155;
+  background-color: rgba(148, 163, 184, 0.25);
+  transition: background-color 0.15s ease, transform 0.15s ease;
+}
+
+body.dark-theme .win-btn {
+  color: #e2e8f0;
+  background-color: rgba(255, 255, 255, 0.12);
+}
+
+.win-btn:hover {
+  transform: scale(1.1);
+}
+
+.win-btn-close:hover {
+  background-color: #ef4444;
+  color: #ffffff;
+}
+
+.win-btn-maximize:hover {
+  background-color: #10b981;
+  color: #ffffff;
+}
+
+.win-btn-minimize:hover {
+  background-color: #f59e0b;
+  color: #ffffff;
+}
+
+.window-content {
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.window-resize-handle {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 16px;
+  height: 16px;
+  cursor: se-resize;
+  z-index: 10;
+}

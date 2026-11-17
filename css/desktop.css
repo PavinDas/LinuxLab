@@ -1,0 +1,223 @@
+/**
+ * Desktop layout, Wallpapers, Desktop Icons, and Notifications
+ */
+#desktop {
+  position: absolute;
+  top: 38px;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  overflow: hidden;
+  background-color: var(--bg-primary);
+}
+
+/* Wallpaper Backgrounds */
+.desktop-wallpaper {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+  transition: background 0.5s ease;
+}
+
+/* Wallpaper 1: Mascot Panda with Laptop */
+.wp-mascot {
+  background: radial-gradient(circle at 75% 60%, rgba(16, 185, 129, 0.15), transparent 45%),
+              radial-gradient(circle at 25% 30%, rgba(192, 132, 252, 0.12), transparent 40%),
+              linear-gradient(135deg, #1e1b4b 0%, #0f172a 50%, #064e3b 100%);
+  background-size: cover;
+}
+body:not(.dark-theme) .wp-mascot {
+  background: radial-gradient(circle at 75% 60%, rgba(167, 243, 208, 0.6), transparent 50%),
+              radial-gradient(circle at 25% 30%, rgba(233, 213, 255, 0.6), transparent 45%),
+              linear-gradient(135deg, #f0fdf4 0%, #f8fafc 50%, #eff6ff 100%);
+}
+
+/* Wallpaper 2: Cyber Neon Grid */
+.wp-cyber {
+  background-color: #0b0f19;
+  background-image: 
+    linear-gradient(rgba(16, 185, 129, 0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(16, 185, 129, 0.08) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+/* Wallpaper 3: Pastel Dawn */
+.wp-pastel {
+  background: linear-gradient(135deg, #fed7aa 0%, #fbcfe8 50%, #c4b5fd 100%);
+}
+body.dark-theme .wp-pastel {
+  background: linear-gradient(135deg, #431407 0%, #4a044e 50%, #1e1b4b 100%);
+}
+
+/* Wallpaper 4: Minimal Slate */
+.wp-slate {
+  background: linear-gradient(145deg, #1e293b, #0f172a);
+}
+
+/* Desktop Icons Grid */
+.desktop-icons-container {
+  position: absolute;
+  top: 24px;
+  left: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  z-index: 5;
+}
+
+.desktop-icon-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 92px;
+  height: 92px;
+  border-radius: 14px;
+  padding: 8px;
+  cursor: pointer;
+  transition: var(--transition-smooth);
+}
+
+.desktop-icon-item:hover {
+  background-color: rgba(255, 255, 255, 0.18);
+  backdrop-filter: blur(8px);
+}
+body:not(.dark-theme) .desktop-icon-item:hover {
+  background-color: rgba(0, 0, 0, 0.08);
+}
+
+.desktop-icon-item:focus {
+  background-color: rgba(16, 185, 129, 0.25);
+  box-shadow: 0 0 0 2px var(--accent-green);
+}
+
+.desktop-icon-symbol {
+  font-size: 42px;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.2));
+  margin-bottom: 6px;
+}
+
+.desktop-icon-label {
+  font-size: 13px;
+  font-weight: 600;
+  text-align: center;
+  color: var(--text-primary);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+  word-break: break-word;
+  max-width: 86px;
+}
+body:not(.dark-theme) .desktop-icon-label {
+  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
+}
+
+/* Toast Notifications */
+.notifications-container {
+  position: fixed;
+  top: 48px;
+  right: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  z-index: 9999;
+  pointer-events: none;
+}
+
+.notification-toast {
+  pointer-events: auto;
+  width: 320px;
+  background-color: var(--bg-surface-translucent);
+  backdrop-filter: blur(16px);
+  border: 1px solid var(--border-color);
+  border-radius: 14px;
+  padding: 12px 16px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+  animation: slideInRight 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.notification-toast.fade-out {
+  opacity: 0;
+  transform: translateX(30px);
+}
+
+.notification-toast.toast-badge {
+  border-left: 4px solid #f59e0b;
+}
+
+.toast-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.toast-title {
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.toast-close {
+  color: var(--text-muted);
+  font-size: 14px;
+}
+
+.toast-close:hover {
+  color: var(--text-primary);
+}
+
+.toast-body {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(40px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+/* Custom Context Menu */
+.custom-context-menu {
+  position: fixed;
+  z-index: 10000;
+  width: 210px;
+  background-color: var(--bg-surface-translucent);
+  backdrop-filter: blur(18px);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
+  padding: 6px;
+}
+
+.custom-context-menu.hidden {
+  display: none;
+}
+
+.context-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  font-size: 13px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.context-item:hover {
+  background-color: var(--accent-green);
+  color: #ffffff;
+}
+
+.context-icon {
+  font-size: 15px;
+}
+
+.context-separator {
+  height: 1px;
+  background-color: var(--border-color);
+  margin: 5px 0;
+}

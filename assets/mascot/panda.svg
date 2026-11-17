@@ -1,0 +1,35 @@
+<svg width="256" height="256" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="pandaGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#10b981" stop-opacity="0.3"/>
+      <stop offset="100%" stop-color="#10b981" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <!-- Background Glow -->
+  <circle cx="100" cy="100" r="95" fill="url(#pandaGlow)"/>
+  <!-- Head Base -->
+  <circle cx="100" cy="100" r="75" fill="#f8fafc" stroke="#334155" stroke-width="4"/>
+  <!-- Ears -->
+  <circle cx="45" cy="50" r="22" fill="#1e293b"/>
+  <circle cx="155" cy="50" r="22" fill="#1e293b"/>
+  <circle cx="45" cy="50" r="12" fill="#334155"/>
+  <circle cx="155" cy="50" r="12" fill="#334155"/>
+  <!-- Eye Patches -->
+  <ellipse cx="75" cy="95" rx="18" ry="24" fill="#1e293b" transform="rotate(-15 75 95)"/>
+  <ellipse cx="125" cy="95" rx="18" ry="24" fill="#1e293b" transform="rotate(15 125 95)"/>
+  <!-- Eyes -->
+  <circle cx="78" cy="95" r="7" fill="#22c55e"/>
+  <circle cx="122" cy="95" r="7" fill="#22c55e"/>
+  <circle cx="80" cy="93" r="2.5" fill="#ffffff"/>
+  <circle cx="124" cy="93" r="2.5" fill="#ffffff"/>
+  <!-- Cute Hacker Visor -->
+  <rect x="52" y="85" width="96" height="22" rx="6" fill="#10b981" fill-opacity="0.3" stroke="#10b981" stroke-width="2"/>
+  <line x1="90" y1="96" x2="110" y2="96" stroke="#10b981" stroke-width="2"/>
+  <!-- Nose -->
+  <ellipse cx="100" cy="120" rx="9" ry="6" fill="#1e293b"/>
+  <!-- Cute Smile -->
+  <path d="M 92 130 Q 100 138 108 130" stroke="#334155" stroke-width="3" fill="none" stroke-linecap="round"/>
+  <!-- Cheeks -->
+  <circle cx="58" cy="118" r="8" fill="#fda4af" fill-opacity="0.6"/>
+  <circle cx="142" cy="118" r="8" fill="#fda4af" fill-opacity="0.6"/>
+</svg>
