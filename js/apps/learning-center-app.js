@@ -1,6 +1,7 @@
 import { Sanitizer } from '../security/sanitizer.js';
 import { LessonsData } from '../learning/lessons-data.js';
 import { ChallengesData } from '../learning/challenges-data.js';
+import { filterTextInput } from '../security/input-validation.js';
 import { sysEvents } from '../core/event-bus.js';
 
 /**
@@ -337,6 +338,10 @@ export class LearningCenterApp {
           type: 'text',
           className: 'ch-input',
           placeholder: 'Enter flag, IP, or answer...',
+          maxlength: 256,
+          onInput: (e) => {
+            e.target.value = filterTextInput(e.target.value).slice(0, 256);
+          },
           onKeyDown: (e) => {
             if (e.key === 'Enter') submitBtn.click();
           }
@@ -351,7 +356,11 @@ export class LearningCenterApp {
               this.updateScorePill();
               this.renderChallenges();
             } else {
-              alert('Incorrect answer. Check the hint or verify the findings in the terminal!');
+              sysEvents.emit('notify', {
+                title: 'Answer Not Quite Right',
+                message: 'Check the hint or verify your findings in the terminal.',
+                type: 'error'
+              });
             }
           }
         }, 'Submit Answer');

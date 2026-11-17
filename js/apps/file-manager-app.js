@@ -1,6 +1,8 @@
 import { Sanitizer } from '../security/sanitizer.js';
 import { PathValidator } from '../security/path-validator.js';
 import { VirtualPermissions } from '../core/virtual-permissions.js';
+import { SecurityLimits } from '../security/limits.js';
+import { filterTextInput, filterOctalModeInput, validateFilenameInput, validateOctalModeInput } from '../security/input-validation.js';
 import { sysEvents } from '../core/event-bus.js';
 
 /**
@@ -8,14 +10,15 @@ import { sysEvents } from '../core/event-bus.js';
  * Fully interactive graphical file manager synchronized with VirtualFileSystem.
  */
 export class FileManagerApp {
-  constructor(vfs, users, contextMenu, appLauncherCallback) {
+  constructor(vfs, users, contextMenu, appLauncherCallback, dialogs) {
     this.vfs = vfs;
     this.users = users;
     this.contextMenu = contextMenu;
     this.launchApp = appLauncherCallback;
+    this.dialogs = dialogs;
 
-    this.currentPath = '/home/student';
-    this.history = ['/home/student'];
+    this.currentPath = this.users.getCurrentUser().home;
+    this.history = [this.currentPath];
     this.historyIdx = 0;
     this.viewMode = 'grid'; // 'grid' | 'list'
     this.searchQuery = '';
@@ -80,7 +83,9 @@ export class FileManagerApp {
       type: 'text',
       className: 'fm-search-input',
       placeholder: 'Search files...',
+      maxlength: 256,
       onInput: (e) => {
+        e.target.value = filterTextInput(e.target.value).slice(0, 256);
         this.searchQuery = e.target.value.toLowerCase().trim();
         this.renderDirectory();
       }
@@ -122,13 +127,14 @@ export class FileManagerApp {
 
     // Sidebar (GNOME Places)
     const sidebar = Sanitizer.createElement('div', { className: 'fm-sidebar' });
+    const home = this.users.getCurrentUser().home;
     const places = [
-      { name: 'Home', path: '/home/student', icon: '🏠' },
-      { name: 'Desktop', path: '/home/student/Desktop', icon: '🖥️' },
-      { name: 'Documents', path: '/home/student/Documents', icon: '📄' },
-      { name: 'Downloads', path: '/home/student/Downloads', icon: '📥' },
-      { name: 'Pictures', path: '/home/student/Pictures', icon: '🖼️' },
-      { name: 'Projects', path: '/home/student/Projects', icon: '💻' },
+      { name: 'Home', path: home, icon: '🏠' },
+      { name: 'Desktop', path: `${home}/Desktop`, icon: '🖥️' },
+      { name: 'Documents', path: `${home}/Documents`, icon: '📄' },
+      { name: 'Downloads', path: `${home}/Downloads`, icon: '📥' },
+      { name: 'Pictures', path: `${home}/Pictures`, icon: '🖼️' },
+      { name: 'Projects', path: `${home}/Projects`, icon: '💻' },
       { name: 'System Root', path: '/', icon: '💽' },
       { name: 'System Logs', path: '/var/log', icon: '📋' }
     ];
@@ -208,7 +214,7 @@ export class FileManagerApp {
     const rootBtn = Sanitizer.createElement('button', {
       className: 'fm-crumb',
       onClick: () => this.navigateTo('/')
-    }, 'CyberLinux /');
+    }, 'Panda OS /');
     this.breadcrumbBar.appendChild(rootBtn);
 
     let accum = '';
@@ -365,11 +371,18 @@ export class FileManagerApp {
   }
 
   showBackgroundContextMenu(x, y) {
-    const items = [{
-      icon: '📋',
-      label: 'Copy Current Path',
-      action: () => this.copyPathToClipboard(this.currentPath)
-    }];
+    const items = [
+      {
+        icon: '📁+',
+        label: 'New Folder',
+        action: () => this.promptCreateFolder()
+      },
+      {
+        icon: '📋',
+        label: 'Copy Current Path',
+        action: () => this.copyPathToClipboard(this.currentPath)
+      }
+    ];
     if (this.clipboard) {
       items.push({ icon: '📥', label: 'Paste', action: () => this.pasteItems() });
     }
@@ -508,43 +521,78 @@ export class FileManagerApp {
     return copied;
   }
 
-  promptCreateFolder() {
-    const name = prompt('Enter new folder name:');
-    if (name) {
-      const res = this.vfs.createDirectory(`${this.currentPath}/${name}`, '/', this.users.getCurrentUser());
-      if (!res.success) alert(res.error);
-      this.renderDirectory();
+  async promptCreateFolder() {
+    const name = await this.dialogs.prompt({
+      title: 'Create Folder',
+      message: 'Enter a name for the new folder.',
+      maxLength: SecurityLimits.MAX_FILENAME_LENGTH,
+      validate: validateFilenameInput
+    });
+    if (name === null || !name.trim()) return;
+
+    const res = this.vfs.createDirectory(`${this.currentPath}/${name}`, '/', this.users.getCurrentUser());
+    if (!res.success) {
+      await this.dialogs.alert({ title: 'Could Not Create Folder', message: res.error });
+      return;
     }
+    this.renderDirectory();
   }
 
-  promptCreateFile() {
-    const name = prompt('Enter new file name:');
-    if (name) {
-      const res = this.vfs.writeFile(`${this.currentPath}/${name}`, '', '/', this.users.getCurrentUser());
-      if (!res.success) alert(res.error);
-      this.renderDirectory();
+  async promptCreateFile() {
+    const name = await this.dialogs.prompt({
+      title: 'Create File',
+      message: 'Enter a name for the new file.',
+      maxLength: SecurityLimits.MAX_FILENAME_LENGTH,
+      validate: validateFilenameInput
+    });
+    if (name === null || !name.trim()) return;
+
+    const res = this.vfs.writeFile(`${this.currentPath}/${name}`, '', '/', this.users.getCurrentUser());
+    if (!res.success) {
+      await this.dialogs.alert({ title: 'Could Not Create File', message: res.error });
+      return;
     }
+    this.renderDirectory();
   }
 
-  promptRename(entry) {
-    const newName = prompt('Enter new name:', entry.name);
-    if (newName && newName !== entry.name) {
-      const src = `${this.currentPath}/${entry.name}`;
-      const dest = `${this.currentPath}/${newName}`;
-      const res = this.vfs.moveNode(src, dest, '/', this.users.getCurrentUser());
-      if (!res.success) alert(res.error);
-      this.renderDirectory();
+  async promptRename(entry) {
+    const newName = await this.dialogs.prompt({
+      title: 'Rename Item',
+      message: 'Enter a new name.',
+      value: entry.name,
+      maxLength: SecurityLimits.MAX_FILENAME_LENGTH,
+      validate: validateFilenameInput
+    });
+    if (newName === null || !newName || newName === entry.name) return;
+
+    const src = `${this.currentPath}/${entry.name}`;
+    const dest = `${this.currentPath}/${newName}`;
+    const res = this.vfs.moveNode(src, dest, '/', this.users.getCurrentUser());
+    if (!res.success) {
+      await this.dialogs.alert({ title: 'Could Not Rename Item', message: res.error });
+      return;
     }
+    this.renderDirectory();
   }
 
-  showPropertiesModal(entry, fullPath) {
+  async showPropertiesModal(entry, fullPath) {
     const modeOctal = (entry.permissions).toString(8);
-    const newMode = prompt(`File: ${entry.name}\nOwner: ${entry.owner}\nPermissions: ${entry.permString} (${modeOctal})\n\nChange octal mode (e.g. 755, 644, 4755 for SUID):`, modeOctal);
-    if (newMode) {
-      const res = this.vfs.chmod(fullPath, newMode, '/', this.users.getCurrentUser());
-      if (!res.success) alert(res.error);
-      this.renderDirectory();
+    const newMode = await this.dialogs.prompt({
+      title: `Permissions: ${entry.name}`,
+      message: `Owner: ${entry.owner}\nCurrent permissions: ${entry.permString} (${modeOctal})\nEnter an octal mode such as 755, 644, or 4755.`,
+      value: modeOctal,
+      maxLength: 4,
+      filter: filterOctalModeInput,
+      validate: validateOctalModeInput
+    });
+    if (newMode === null || !newMode) return;
+
+    const res = this.vfs.chmod(fullPath, newMode, '/', this.users.getCurrentUser());
+    if (!res.success) {
+      await this.dialogs.alert({ title: 'Could Not Change Permissions', message: res.error });
+      return;
     }
+    this.renderDirectory();
   }
 
   setupListeners() {

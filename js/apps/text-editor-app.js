@@ -1,4 +1,6 @@
 import { Sanitizer } from '../security/sanitizer.js';
+import { SecurityLimits } from '../security/limits.js';
+import { validateVirtualPathInput } from '../security/input-validation.js';
 import { sysEvents } from '../core/event-bus.js';
 
 /**
@@ -6,9 +8,10 @@ import { sysEvents } from '../core/event-bus.js';
  * Lightweight virtual text editor with line numbers, file statistics, and VFS integration.
  */
 export class TextEditorApp {
-  constructor(vfs, users) {
+  constructor(vfs, users, dialogs) {
     this.vfs = vfs;
     this.users = users;
+    this.dialogs = dialogs;
     this.currentFilePath = null;
     this.isDirty = false;
   }
@@ -50,6 +53,7 @@ export class TextEditorApp {
     
     this.textarea = Sanitizer.createElement('textarea', {
       className: 'editor-textarea',
+      maxlength: SecurityLimits.MAX_FILE_SIZE_BYTES,
       spellcheck: 'false',
       onInput: () => {
         this.isDirty = true;
@@ -89,7 +93,7 @@ export class TextEditorApp {
   loadFile(path) {
     const res = this.vfs.readFile(path, '/', this.users.getCurrentUser());
     if (!res.success) {
-      alert(`Cannot open file: ${res.error}`);
+      this.dialogs.alert({ title: 'Could Not Open File', message: res.error });
       return;
     }
     this.currentFilePath = path;
@@ -100,17 +104,26 @@ export class TextEditorApp {
     this.updateTitle();
   }
 
-  saveFile() {
+  async saveFile() {
+    let targetPath = this.currentFilePath;
     if (!this.currentFilePath) {
-      const path = prompt('Save file as (absolute path, e.g. /home/student/notes.txt):', '/home/student/untitled.txt');
-      if (!path) return;
-      this.currentFilePath = path;
+      const home = this.users.getCurrentUser().home;
+      const path = await this.dialogs.prompt({
+        title: 'Save File As',
+        message: `Enter an absolute path, for example ${home}/notes.txt.`,
+        value: `${home}/untitled.txt`,
+        maxLength: SecurityLimits.MAX_PATH_LENGTH,
+        validate: validateVirtualPathInput
+      });
+      if (path === null || !path) return;
+      targetPath = path;
     }
 
-    const res = this.vfs.writeFile(this.currentFilePath, this.textarea.value, '/', this.users.getCurrentUser());
+    const res = this.vfs.writeFile(targetPath, this.textarea.value, '/', this.users.getCurrentUser());
     if (!res.success) {
-      alert(`Failed to save: ${res.error}`);
+      await this.dialogs.alert({ title: 'Could Not Save File', message: res.error });
     } else {
+      this.currentFilePath = targetPath;
       this.isDirty = false;
       this.updateTitle();
       sysEvents.emit('notify', {
@@ -121,8 +134,13 @@ export class TextEditorApp {
     }
   }
 
-  newFile() {
-    if (this.isDirty && !confirm('You have unsaved changes. Discard?')) return;
+  async newFile() {
+    if (this.isDirty && !await this.dialogs.confirm({
+      title: 'Discard Unsaved Changes?',
+      message: 'Your changes have not been saved. Create a new file and discard them?',
+      confirmLabel: 'Discard',
+      danger: true
+    })) return;
     this.currentFilePath = null;
     this.textarea.value = '';
     this.isDirty = false;
@@ -131,8 +149,14 @@ export class TextEditorApp {
     this.updateTitle();
   }
 
-  promptOpenFile() {
-    const path = prompt('Enter path to virtual file to open:', '/home/student/Desktop/welcome.txt');
+  async promptOpenFile() {
+    const path = await this.dialogs.prompt({
+      title: 'Open Virtual File',
+      message: 'Enter the path to the virtual file you want to open.',
+      value: `${this.users.getCurrentUser().home}/Desktop/welcome.txt`,
+      maxLength: SecurityLimits.MAX_PATH_LENGTH,
+      validate: validateVirtualPathInput
+    });
     if (path) {
       this.loadFile(path);
     }

@@ -10,6 +10,10 @@
   pointer-events: none;
 }
 
+body.app-fullscreen #dock {
+  display: none;
+}
+
 .dock-inner {
   pointer-events: auto;
   display: flex;

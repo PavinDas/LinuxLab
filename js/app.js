@@ -2,6 +2,7 @@ import { VirtualUsers } from './core/virtual-users.js';
 import { VirtualFileSystem } from './core/virtual-filesystem.js';
 import { VirtualProcesses } from './core/virtual-processes.js';
 import { VirtualNetwork } from './core/virtual-network.js';
+import { SYSTEM_INFO } from './core/system-info.js';
 import { StorageManager } from './core/storage-manager.js';
 import { CommandRegistry } from './terminal/command-registry.js';
 import { registerAllCommands } from './terminal/commands-catalog.js';
@@ -12,6 +13,10 @@ import { TopPanel } from './desktop/panel.js';
 import { Launcher } from './desktop/launcher.js';
 import { NotificationManager } from './desktop/notifications.js';
 import { ContextMenu } from './desktop/context-menu.js';
+import { DialogManager } from './desktop/dialogs.js';
+import { SecurityLimits } from './security/limits.js';
+import { validateFilenameInput } from './security/input-validation.js';
+import { PathValidator } from './security/path-validator.js';
 import { sysEvents } from './core/event-bus.js';
 
 // Applications
@@ -29,7 +34,11 @@ const WALLPAPER_CLASSES = {
   mascot: 'wp-mascot',
   'cyber-dark': 'wp-cyber',
   'pastel-dawn': 'wp-pastel',
-  'minimal-slate': 'wp-slate'
+  'minimal-slate': 'wp-slate',
+  'astronaut-jellyfish': 'wp-astronaut',
+  'neon-city': 'wp-neon-city',
+  'samurai-sunset': 'wp-samurai',
+  'minimalist-river': 'wp-river'
 };
 
 /**
@@ -53,7 +62,13 @@ export class CyberLinux {
     // 2. Storage & Progress
     this.storage = new StorageManager(this.vfs);
     this.storage.loadVFS();
+    this.vfs.ensureKiddyHome();
+    this.vfs.ensurePandaOSProfile();
     this.vfs.ensureForensicImages();
+    this.vfs.ensureUserPhotos();
+    const hostname = this.vfs.readFile('/etc/hostname', '/', { name: 'root', uid: 0, groups: ['root'] });
+    this.network.hostname = hostname.success ? hostname.content.trim() : SYSTEM_INFO.hostname;
+    this.users.hostname = this.network.hostname;
 
     // 3. Command Registry & Catalog
     this.registry = new CommandRegistry();
@@ -76,6 +91,7 @@ export class CyberLinux {
     // Context Menu & Notifications
     this.contextMenu = new ContextMenu();
     this.notifications = new NotificationManager(this.notificationsEl);
+    this.dialogs = new DialogManager();
     document.addEventListener('contextmenu', (e) => e.preventDefault());
 
     // Window Manager
@@ -91,7 +107,7 @@ export class CyberLinux {
       { id: 'calculator', name: 'Calculator', icon: '🔢', category: 'Utilities', description: 'Mathematical calculations with safe parsing' },
       { id: 'image-viewer', name: 'Image Viewer', icon: '🖼️', category: 'Utilities', description: 'View and inspect pictures and graphics' },
       { id: 'settings', name: 'Settings', icon: '⚙️', category: 'System', description: 'Themes, wallpapers, backup, and reset' },
-      { id: 'about', name: 'About CyberLinux', icon: '🐼', category: 'System', description: 'System information and project specs' }
+      { id: 'about', name: 'About Panda OS', icon: '🐼', category: 'System', description: 'Panda OS system information' }
     ];
 
     // Dock & Top Panel & Launcher
@@ -101,6 +117,7 @@ export class CyberLinux {
 
     // Render Desktop Icons
     this.renderDesktopIcons();
+    sysEvents.on('vfs:change', () => this.renderDesktopIcons());
 
     // Desktop Context Menu
     this.desktopEl.addEventListener('contextmenu', (e) => {
@@ -145,31 +162,70 @@ export class CyberLinux {
     if (!desktopGrid) return;
     desktopGrid.innerHTML = '';
 
+    const user = this.users.getCurrentUser();
+    const desktopPath = `${user.home}/Desktop`;
+    const desktopRes = this.vfs.listDirectory(desktopPath, '/', user);
+    const entries = desktopRes.success ? desktopRes.entries : [];
+    const makeFileItem = (entry) => {
+      const path = PathValidator.normalize(`${desktopPath}/${entry.name}`, '/', user.home);
+      const lowerName = entry.name.toLowerCase();
+      const isImage = /\.(svg|png|jpe?g|gif|webp)$/.test(lowerName);
+      return {
+        id: `desktop-item-${entry.name}`,
+        name: entry.name,
+        icon: entry.type === 'dir' ? '📁' : isImage ? '🖼️' : '📄',
+        action: () => {
+          if (entry.type === 'dir') this.launchApp('file-manager', { path });
+          else this.launchApp(isImage ? 'image-viewer' : 'text-editor', { path });
+        }
+      };
+    };
+    const welcomeEntry = entries.find(entry => entry.type === 'file' && entry.name === 'welcome.txt');
     const desktopItems = [
-      { id: 'welcome', name: 'welcome.txt', icon: '📄', action: () => this.launchApp('text-editor', { path: '/home/student/Desktop/welcome.txt' }) },
+      ...(welcomeEntry ? [makeFileItem(welcomeEntry)] : []),
       { id: 'term', name: 'Terminal', icon: '💻', action: () => this.launchApp('terminal') },
       { id: 'files', name: 'Files', icon: '📁', action: () => this.launchApp('file-manager') },
-      { id: 'ref', name: 'Commands', icon: '📖', action: () => this.launchApp('command-reference') }
+      { id: 'ref', name: 'Commands', icon: '📖', action: () => this.launchApp('command-reference') },
+      ...entries.filter(entry => entry !== welcomeEntry).map(makeFileItem)
     ];
 
     for (const item of desktopItems) {
       const el = document.createElement('div');
       el.className = 'desktop-icon-item';
       el.tabIndex = 0;
-      el.innerHTML = `
-        <span class="desktop-icon-symbol">${item.icon}</span>
-        <span class="desktop-icon-label">${item.name}</span>
-      `;
+      el.setAttribute('role', 'button');
+      el.setAttribute('aria-label', `Open ${item.name}`);
+      const icon = document.createElement('span');
+      icon.className = 'desktop-icon-symbol';
+      icon.textContent = item.icon;
+      const label = document.createElement('span');
+      label.className = 'desktop-icon-label';
+      label.textContent = item.name;
+      el.append(icon, label);
       el.addEventListener('dblclick', item.action);
+      el.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          item.action();
+        }
+      });
       desktopGrid.appendChild(el);
     }
   }
 
-  promptDesktopNewFolder() {
-    const name = prompt('Folder name on Desktop:');
-    if (name) {
-      this.vfs.createDirectory(`/home/student/Desktop/${name}`, '/', this.users.getCurrentUser());
-      this.renderDesktopIcons();
+  async promptDesktopNewFolder() {
+    const name = await this.dialogs.prompt({
+      title: 'Create Desktop Folder',
+      message: 'Enter a name for the new folder.',
+      maxLength: SecurityLimits.MAX_FILENAME_LENGTH,
+      validate: validateFilenameInput
+    });
+    if (name === null || !name.trim()) return;
+
+    const user = this.users.getCurrentUser();
+    const result = this.vfs.createDirectory(`${user.home}/Desktop/${name}`, '/', user);
+    if (!result.success) {
+      await this.dialogs.alert({ title: 'Could Not Create Folder', message: result.error });
     }
   }
 
@@ -177,6 +233,13 @@ export class CyberLinux {
     // If already open, focus it
     if (this.wm.windows.has(appId)) {
       const win = this.wm.windows.get(appId);
+      if (appId === 'image-viewer' && options.path) {
+        win.appInstance.loadImage(options.path);
+        win.appInstance.titleLabel.textContent = options.path.split('/').pop();
+      }
+      if (appId === 'file-manager' && options.path) {
+        win.appInstance.navigateTo(options.path);
+      }
       if (win.minimized) this.wm.restoreWindow(appId);
       this.wm.focusWindow(appId);
       return win;
@@ -204,8 +267,9 @@ export class CyberLinux {
         icon = '📁';
         width = 920;
         height = 580;
-        appInstance = new FileManagerApp(this.vfs, this.users, this.contextMenu, (id, opt) => this.launchApp(id, opt));
+        appInstance = new FileManagerApp(this.vfs, this.users, this.contextMenu, (id, opt) => this.launchApp(id, opt), this.dialogs);
         appContent = appInstance.createUI();
+        if (options.path) appInstance.navigateTo(options.path);
         break;
 
       case 'command-reference':
@@ -222,7 +286,7 @@ export class CyberLinux {
         icon = '📝';
         width = 840;
         height = 540;
-        appInstance = new TextEditorApp(this.vfs, this.users);
+        appInstance = new TextEditorApp(this.vfs, this.users, this.dialogs);
         appContent = appInstance.createUI(options.path || null);
         break;
 
@@ -249,7 +313,7 @@ export class CyberLinux {
         icon = '⚙️';
         width = 880;
         height = 580;
-        appInstance = new SettingsApp(this.storage, this.users);
+        appInstance = new SettingsApp(this.storage, this.users, this.dialogs);
         appContent = appInstance.createUI();
         break;
 
@@ -259,11 +323,11 @@ export class CyberLinux {
         width = 720;
         height = 520;
         appInstance = new ImageViewerApp(this.vfs, this.users);
-        appContent = appInstance.createUI(options.path || '/home/student/Pictures/mascot.svg');
+        appContent = appInstance.createUI(options.path || `${this.users.getCurrentUser().home}/Pictures/mascot.svg`);
         break;
 
       case 'about':
-        title = 'About CyberLinux';
+        title = 'About Panda OS';
         icon = '🐼';
         width = 560;
         height = 460;
@@ -291,10 +355,28 @@ export class CyberLinux {
     });
 
     winData.appInstance = appInstance;
+    if (appId === 'image-viewer') {
+      appInstance.setWindowResizeHandler((imageWidth, imageHeight) => {
+        this.wm.resizeWindow(appId, imageWidth + 44, imageHeight + 120);
+      });
+    }
     return winData;
   }
 
   setupShortcuts() {
+    window.addEventListener('keydown', (e) => {
+      if (e.ctrlKey && !e.altKey && !e.shiftKey && !e.metaKey && e.key.toLowerCase() === 'q') {
+        e.preventDefault();
+        e.stopPropagation();
+        if (this.wm.activeWindowId) {
+          this.wm.closeWindow(this.wm.activeWindowId);
+        }
+      } else if (e.ctrlKey && !e.altKey && !e.shiftKey && !e.metaKey &&
+        e.key.toLowerCase() === 'w' && this.wm.activeWindowId === 'terminal') {
+        e.preventDefault();
+      }
+    }, true);
+
     window.addEventListener('keydown', (e) => {
       // Ctrl + Alt + T: Open Terminal
       if (e.ctrlKey && e.altKey && e.key.toLowerCase() === 't') {
@@ -348,7 +430,7 @@ export class CyberLinux {
     const wpEl = document.getElementById('desktop-wallpaper');
     const wallpaperClass = WALLPAPER_CLASSES[wpId];
     if (!wpEl || !wallpaperClass) return;
-    wpEl.classList.remove('wp-mascot', 'wp-cyber', 'wp-pastel', 'wp-slate');
+    wpEl.classList.remove(...Object.values(WALLPAPER_CLASSES));
     wpEl.classList.add(wallpaperClass);
   }
 }

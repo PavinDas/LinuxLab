@@ -110,6 +110,9 @@ export class StorageManager {
 
   importFullBackup(jsonString) {
     try {
+      if (typeof jsonString !== 'string' || jsonString.length > SecurityLimits.MAX_BACKUP_SIZE_BYTES) {
+        return { success: false, error: 'Backup file is invalid or exceeds the size limit' };
+      }
       const data = Sanitizer.safeJSONParse(jsonString);
       if (!data || data.version !== 1 || !data.vfs) {
         return { success: false, error: 'Invalid or incompatible backup file format' };

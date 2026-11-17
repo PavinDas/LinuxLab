@@ -1,5 +1,6 @@
 import { PathValidator } from '../security/path-validator.js';
 import { VirtualPermissions } from '../core/virtual-permissions.js';
+import { SYSTEM_INFO } from '../core/system-info.js';
 
 /**
  * Extended Command Catalog
@@ -83,8 +84,8 @@ export function registerExtendedCommands(registry, vfs, users, processes, networ
     syntax: 'printf format [arguments...]',
     options: [],
     practicalUse: 'Reliable string formatting in shell scripts and payload generation.',
-    example: 'printf "User: %s\\nUID: %d\\n" student 1000',
-    expectedOutput: 'User: student\nUID: 1000',
+    example: `printf "User: %s\\nUID: %d\\n" ${SYSTEM_INFO.username} 1000`,
+    expectedOutput: `User: ${SYSTEM_INFO.username}\nUID: 1000`,
     execute: (args) => {
       if (args.length === 0) return { exitCode: 0, stdout: '' };
       let fmt = args[0].replace(/\\n/g, '\n').replace(/\\t/g, '\t');
@@ -167,7 +168,7 @@ export function registerExtendedCommands(registry, vfs, users, processes, networ
     expectedOutput: '/home/student/Documents',
     execute: (args, ctx) => {
       const target = args[0] || ctx.cwd;
-      const norm = PathValidator.normalize(target, ctx.cwd);
+      const norm = PathValidator.normalize(target, ctx.cwd, ctx.user.home);
       return { exitCode: 0, stdout: `${norm}\n` };
     }
   });
@@ -266,7 +267,7 @@ export function registerExtendedCommands(registry, vfs, users, processes, networ
     expectedOutput: '[Opened file in Text Editor]',
     execute: (args, ctx) => {
       const file = args[0];
-      const norm = file ? PathValidator.normalize(file, ctx.cwd) : '/home/student/untitled.txt';
+      const norm = file ? PathValidator.normalize(file, ctx.cwd, ctx.user.home) : `${ctx.user.home}/untitled.txt`;
       return {
         exitCode: 0,
         stdout: `[Nano Simulation: You can also use the graphical Text Editor from the dock to edit '${norm}' with full syntax highlighting!]\n`
@@ -389,7 +390,7 @@ export function registerExtendedCommands(registry, vfs, users, processes, networ
     expectedOutput: '# file: /etc/passwd\n# owner: root\n# group: root\nuser::rw-\ngroup::r--\nother::r--',
     execute: (args, ctx) => {
       const f = args[0] || '/etc/passwd';
-      const node = vfs.getNode(f, ctx.cwd);
+      const node = vfs.getNode(f, ctx.cwd, ctx.user.home);
       if (!node) return { exitCode: 1, stderr: `getfacl: ${f}: No such file or directory\n` };
       const out = `# file: ${f}\n# owner: ${node.owner}\n# group: ${node.group}\nuser::rw-\ngroup::r--\nother::r--\n`;
       return { exitCode: 0, stdout: out };
@@ -489,8 +490,11 @@ export function registerExtendedCommands(registry, vfs, users, processes, networ
     options: [],
     practicalUse: 'Determine active sessions and users on multi-tenant servers.',
     example: 'who',
-    expectedOutput: 'student  pts/0        2026-11-17 08:15 (192.168.1.50)',
-    execute: () => ({ exitCode: 0, stdout: 'student  pts/0        2026-11-17 08:15 (192.168.1.50)\n' })
+    expectedOutput: `${SYSTEM_INFO.username}  pts/0        2026-11-17 08:15 (192.168.1.50)`,
+    execute: (args, ctx) => ({
+      exitCode: 0,
+      stdout: `${ctx.user.name}  pts/0        2026-11-17 08:15 (192.168.1.50)\n`
+    })
   });
 
   registry.register({
@@ -568,12 +572,12 @@ wtmp begins Tue Nov 17 08:00:00 2026
     practicalUse: 'Discover hidden listening ports, opened log files, and active network connections.',
     example: 'lsof -i',
     expectedOutput: 'COMMAND    PID USER   FD   TYPE DEVICE SIZE/OFF NODE NAME\nsshd      1240 root    3u  IPv4  42100      0t0  TCP *:22 (LISTEN)',
-    execute: () => {
+    execute: (args, ctx) => {
       const out = `COMMAND    PID USER   FD   TYPE DEVICE SIZE/OFF NODE NAME
 systemd      1 root  cwd    DIR    8,1     4096    2 /
 sshd      1240 root    3u  IPv4  14210      0t0  TCP *:22 (LISTEN)
 nginx     1100 root    6u  IPv4  18200      0t0  TCP *:80 (LISTEN)
-bash      1520 student 0u   CHR  136,0      0t0    3 /dev/pts/0
+bash      1520 ${ctx.user.name} 0u   CHR  136,0      0t0    3 /dev/pts/0
 `;
       return { exitCode: 0, stdout: out };
     }
@@ -606,12 +610,12 @@ bash      1520 student 0u   CHR  136,0      0t0    3 /dev/pts/0
     options: ['-f (output filesystem information)'],
     practicalUse: 'Audit partition layouts, unmounted drives, and potential forensic targets.',
     example: 'lsblk',
-    expectedOutput: 'NAME   MAJ:MIN RM  SIZE RO TYPE MOUNTPOINTS\nsda      8:0    0  140G  0 disk \n├─sda1   8:1    0   40G  0 part /\n└─sda2   8:2    0  100G  0 part /home',
+    expectedOutput: `NAME   MAJ:MIN RM  SIZE RO TYPE MOUNTPOINTS\nsda      8:0    0  ${SYSTEM_INFO.storageGB}G  0 disk`,
     execute: () => {
       const out = `NAME   MAJ:MIN RM  SIZE RO TYPE MOUNTPOINTS
-sda      8:0    0  140G  0 disk 
-├─sda1   8:1    0   40G  0 part /
-└─sda2   8:2    0  100G  0 part /home
+sda      8:0    0  ${SYSTEM_INFO.storageGB}G  0 disk
+├─sda1   8:1    0   64G  0 part /
+└─sda2   8:2    0  ${SYSTEM_INFO.storageGB - 64}G  0 part /home
 sr0     11:0    1 1024M  0 rom  
 `;
       return { exitCode: 0, stdout: out };
@@ -807,16 +811,19 @@ portal.${domain}
     options: ['-t <type> (dsa | ecdsa | ed25519 | rsa)', '-b <bits> (key length)'],
     practicalUse: 'Generate SSH private/public key pairs for passwordless remote access.',
     example: 'ssh-keygen -t ed25519',
-    expectedOutput: 'Generating public/private ed25519 key pair.\nYour identification has been saved in /home/student/.ssh/id_ed25519',
+    expectedOutput: `Generating public/private ed25519 key pair.\nYour identification has been saved in ${SYSTEM_INFO.home}/.ssh/id_ed25519`,
     execute: (args, ctx) => {
-      vfs.createDirectory('/home/student/.ssh', '/', ctx.user, { parents: true });
-      vfs.writeFile('/home/student/.ssh/id_ed25519', '-----BEGIN OPENSSH PRIVATE KEY-----\nb3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAABAAAAMwAAAAtzc2gtZW\n-----END OPENSSH PRIVATE KEY-----\n', '/', ctx.user);
-      vfs.writeFile('/home/student/.ssh/id_ed25519.pub', 'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIExampleStudentKey student@cyberlinux\n', '/', ctx.user);
+      const sshDirectory = `${ctx.user.home}/.ssh`;
+      const privateKeyPath = `${sshDirectory}/id_ed25519`;
+      const publicKeyPath = `${privateKeyPath}.pub`;
+      vfs.createDirectory(sshDirectory, '/', ctx.user, { parents: true });
+      vfs.writeFile(privateKeyPath, '-----BEGIN OPENSSH PRIVATE KEY-----\nb3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAABAAAAMwAAAAtzc2gtZW\n-----END OPENSSH PRIVATE KEY-----\n', '/', ctx.user);
+      vfs.writeFile(publicKeyPath, `ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIExampleStudentKey ${ctx.user.name}@${network.hostname}\n`, '/', ctx.user);
       const out = `Generating public/private ed25519 key pair.
-Your identification has been saved in /home/student/.ssh/id_ed25519
-Your public key has been saved in /home/student/.ssh/id_ed25519.pub
+Your identification has been saved in ${privateKeyPath}
+Your public key has been saved in ${publicKeyPath}
 The key fingerprint is:
-SHA256:7m14fGk9vY1pQ2rS4tU8wX0z student@cyberlinux
+SHA256:7m14fGk9vY1pQ2rS4tU8wX0z ${ctx.user.name}@${network.hostname}
 `;
       return { exitCode: 0, stdout: out };
     }
@@ -1190,7 +1197,7 @@ SMB1 cli_verify_checksum: verify failed
     example: 'xxd -l 32 /home/student/Pictures/mascot.svg',
     expectedOutput: '00000000: 3c73 7667 2077 6964 7468 3d22 3235 3622  <svg width="256"\n00000010: 2068 6569 6768 743d 2232 3536 2220 7669   height="256" vi',
     execute: (args, ctx) => {
-      const f = args.find(a => !a.startsWith('-')) || '/home/student/Pictures/mascot.svg';
+      const f = args.find(a => !a.startsWith('-')) || `${ctx.user.home}/Pictures/mascot.svg`;
       const res = vfs.readFile(f, ctx.cwd, ctx.user);
       const text = res.success ? res.content : '<svg width="256" height="256" viewBox="0 0 200 200">';
       const lines = [];
@@ -1277,7 +1284,7 @@ End of assembler dump.
     expectedOutput: '● ssh.service - OpenBSD Secure Shell server\n     Loaded: loaded (/lib/systemd/system/ssh.service; enabled)\n     Active: active (running)',
     execute: (args) => {
       const svc = args[1] || args[0] || 'sshd';
-      const out = `● ${svc}.service - CyberLinux System Service
+      const out = `● ${svc}.service - Panda OS System Service
      Loaded: loaded (/lib/systemd/system/${svc}.service; enabled; vendor preset: enabled)
      Active: active (running) since Tue 2026-11-17 08:00:00 UTC; 12h ago
    Main PID: 1240 (${svc})
@@ -1374,7 +1381,7 @@ Connection closed by remote host.
     expectedOutput: '[+] CyberLinux Port Scanner Simulation\n[+] Target host: 192.168.1.10\nPort    21/tcp : OPEN\nPort    22/tcp : OPEN',
     execute: (args, ctx) => {
       if (args.includes('-V') || args.includes('--version')) {
-        return { exitCode: 0, stdout: 'Python 3.10.12 (CyberLinux build)\n' };
+        return { exitCode: 0, stdout: 'Python 3.10.12 (Panda OS build)\n' };
       }
       const script = args.find(a => !a.startsWith('-'));
       if (script) {

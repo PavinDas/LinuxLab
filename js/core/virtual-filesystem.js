@@ -2,6 +2,7 @@ import { PathValidator } from '../security/path-validator.js';
 import { VirtualPermissions } from './virtual-permissions.js';
 import { SecurityLimits } from '../security/limits.js';
 import { sysEvents } from './event-bus.js';
+import { SYSTEM_INFO } from './system-info.js';
 
 const FORENSIC_SAMPLE_IMAGES = [
   {
@@ -45,6 +46,11 @@ const FORENSIC_SAMPLE_IMAGES = [
   }
 ];
 
+const USER_PHOTO_ASSETS = [
+  { name: 'IMG_5555.jpg', assetId: 'img-5555', size: 277142 },
+  { name: 'IMG_5693.jpg', assetId: 'img-5693', size: 303975 }
+];
+
 /**
  * Node class representing files, directories, and symlinks in the VFS.
  */
@@ -53,13 +59,14 @@ export class VFSNode {
     this.name = name;
     this.type = type; // 'file' | 'dir' | 'symlink'
     this.permissions = options.permissions !== undefined ? options.permissions : (type === 'dir' ? 0o755 : 0o644);
-    this.owner = options.owner || 'student';
-    this.group = options.group || 'student';
+    this.owner = options.owner || SYSTEM_INFO.username;
+    this.group = options.group || SYSTEM_INFO.username;
     this.size = options.size || (options.content ? options.content.length : 0);
     this.mtime = options.mtime ? new Date(options.mtime) : new Date();
     this.ctime = options.ctime ? new Date(options.ctime) : new Date();
     this.atime = options.atime ? new Date(options.atime) : new Date();
     this.content = options.content || '';
+    this.assetId = options.assetId || null;
     this.target = options.target || null; // for symlinks
     this.suid = !!options.suid;
     this.sgid = !!options.sgid;
@@ -115,12 +122,12 @@ export class VirtualFileSystem {
     }
 
     // Default starter files
-    this.rawCreateFile('/etc/hostname', 'cyberlinux\n', 0o644, 'root', 'root');
-    this.rawCreateFile('/etc/os-release', 'NAME="CyberLinux"\nVERSION="2.0 LTS (Panda Edition)"\nID=cyberlinux\nID_LIKE=debian\nPRETTY_NAME="CyberLinux 2.0 LTS (Cybersecurity Edition)"\nHOME_URL="https://github.com"\n', 0o644, 'root', 'root');
+    this.rawCreateFile('/etc/hostname', `${SYSTEM_INFO.hostname}\n`, 0o644, 'root', 'root');
+    this.rawCreateFile('/etc/os-release', `NAME="${SYSTEM_INFO.osName}"\nVERSION="1.0"\nID=pandaos\nID_LIKE=debian\nPRETTY_NAME="${SYSTEM_INFO.osName}"\nHOME_URL="https://github.com"\n`, 0o644, 'root', 'root');
     this.rawCreateFile('/etc/resolv.conf', 'nameserver 1.1.1.1\nnameserver 8.8.8.8\nsearch cyberlinux.local\n', 0o644, 'root', 'root');
-    this.rawCreateFile('/etc/passwd', 'root:x:0:0:root:/root:/bin/bash\ndaemon:x:1:1:daemon:/usr/sbin:/usr/sbin/nologin\nsyslog:x:104:110::/home/syslog:/usr/sbin/nologin\nstudent:x:1000:1000:Cybersecurity Student:/home/student:/bin/bash\nnobody:x:65534:65534:nobody:/nonexistent:/usr/sbin/nologin\n', 0o644, 'root', 'root');
-    this.rawCreateFile('/etc/shadow', 'root:$6$cyberlinux$hashedrootpass...:19500:0:99999:7:::\nstudent:$6$cyberlinux$hashedstudentpass...:19500:0:99999:7:::\n', 0o600, 'root', 'root');
-    this.rawCreateFile('/etc/sudoers', 'root ALL=(ALL:ALL) ALL\n%sudo ALL=(ALL:ALL) ALL\nstudent ALL=(ALL) NOPASSWD: ALL\n', 0o440, 'root', 'root');
+    this.rawCreateFile('/etc/passwd', `root:x:0:0:root:/root:/bin/bash\nkiddy:x:1000:1000:Panda OS User:${SYSTEM_INFO.home}:/bin/bash\nstudent:x:1001:1001:Cybersecurity Student:/home/student:/bin/bash\ndaemon:x:1:1:daemon:/usr/sbin:/usr/sbin/nologin\nsyslog:x:104:110::/home/syslog:/usr/sbin/nologin\nnobody:x:65534:65534:nobody:/nonexistent:/usr/sbin/nologin\n`, 0o644, 'root', 'root');
+    this.rawCreateFile('/etc/shadow', 'root:$6$cyberlinux$hashedrootpass...:19500:0:99999:7:::\nkiddy:$6$pandaos$hashedkiddypass...:19500:0:99999:7:::\nstudent:$6$cyberlinux$hashedstudentpass...:19500:0:99999:7:::\n', 0o600, 'root', 'root');
+    this.rawCreateFile('/etc/sudoers', `root ALL=(ALL:ALL) ALL\n%sudo ALL=(ALL:ALL) ALL\n${SYSTEM_INFO.username} ALL=(ALL) NOPASSWD: ALL\n`, 0o440, 'root', 'root');
 
     // System logs
     const authLogContent = `Nov 17 08:12:01 cyberlinux sshd[1240]: Server listening on 0.0.0.0 port 22.
@@ -144,8 +151,8 @@ Nov 17 08:15:01 cyberlinux systemd[1]: Started OpenBSD Secure Shell server.
     this.rawCreateFile('/var/log/syslog', syslogContent, 0o644, 'root', 'root');
 
     // Student desktop files
-    const welcomeText = `# Welcome to CyberLinux!
-Welcome to your interactive Linux Desktop Simulator for Cybersecurity Education.
+    const welcomeText = `# Welcome to Panda OS!
+Welcome to your interactive Panda OS desktop.
 
 Key Features:
 - Full GNOME-inspired desktop interface with cute cartoon styling
@@ -212,17 +219,148 @@ for p in ports:
     // SUID Privilege Escalation binary simulation
     this.rawCreateFile('/usr/bin/find', '#!/bin/bash\n# Standard binary with SUID demonstration\n', 0o4755, 'root', 'root', true);
     this.ensureForensicImages();
+    this.ensureUserPhotos();
+    this.ensureKiddyHome();
+  }
+
+  ensureKiddyHome() {
+    if (this.getNode(SYSTEM_INFO.home)) return;
+
+    const legacyHome = this.getNode('/home/student');
+    const homeDirectory = this.getNode('/home');
+    if (!homeDirectory || homeDirectory.type !== 'dir') {
+      throw new Error('Cannot create Panda OS user home: /home is unavailable');
+    }
+
+    const cloneNode = (source, name) => {
+      const owner = source.owner === 'student' ? SYSTEM_INFO.username : source.owner;
+      const group = source.group === 'student' ? SYSTEM_INFO.username : source.group;
+      const node = new VFSNode(name, source.type, {
+        permissions: source.permissions,
+        owner,
+        group,
+        size: source.size,
+        mtime: source.mtime,
+        content: source.content,
+        assetId: source.assetId,
+        target: source.target,
+        suid: source.suid,
+        sgid: source.sgid,
+        sticky: source.sticky
+      });
+
+      if (source.type === 'dir') {
+        for (const [childName, child] of source.children) {
+          node.children.set(childName, cloneNode(child, childName));
+        }
+      }
+      return node;
+    };
+
+    if (legacyHome && legacyHome.type === 'dir') {
+      const countNodes = (node) => 1 + (node.type === 'dir'
+        ? Array.from(node.children.values()).reduce((count, child) => count + countNodes(child), 0)
+        : 0);
+      const clonedNodeCount = countNodes(legacyHome);
+      if (this.nodeCount + clonedNodeCount > SecurityLimits.MAX_FILESYSTEM_NODES) {
+        throw new Error('Cannot migrate Panda OS user home: filesystem node limit would be exceeded');
+      }
+      homeDirectory.children.set(SYSTEM_INFO.username, cloneNode(legacyHome, SYSTEM_INFO.username));
+      this.nodeCount += clonedNodeCount;
+      return;
+    }
+
+    this.rawMkdir(SYSTEM_INFO.home, 0o755, SYSTEM_INFO.username, SYSTEM_INFO.username);
+    for (const folder of ['Desktop', 'Documents', 'Downloads', 'Pictures', 'Projects']) {
+      this.rawMkdir(`${SYSTEM_INFO.home}/${folder}`, 0o755, SYSTEM_INFO.username, SYSTEM_INFO.username);
+    }
+  }
+
+  ensurePandaOSProfile() {
+    const rootUser = { name: 'root', uid: 0, gid: 0, groups: ['root'] };
+    const readSystemFile = (path) => {
+      const node = this.getNode(path);
+      return node && node.type === 'file' ? node.content : '';
+    };
+    const writeSystemFile = (path, content, permissions = 0o644) => {
+      if (!this.getNode(path)) {
+        this.rawCreateFile(path, content, permissions, 'root', 'root');
+        return;
+      }
+      const result = this.writeFile(path, content, '/', rootUser);
+      if (!result.success) throw new Error(`Could not update ${path}: ${result.error}`);
+    };
+
+    const hostname = readSystemFile('/etc/hostname').trim();
+    if (!hostname || hostname === 'cyberlinux') {
+      writeSystemFile('/etc/hostname', `${SYSTEM_INFO.hostname}\n`);
+    }
+
+    let osRelease = readSystemFile('/etc/os-release');
+    if (!osRelease) {
+      osRelease = `NAME="${SYSTEM_INFO.osName}"\nVERSION="1.0"\nID=pandaos\nID_LIKE=debian\nPRETTY_NAME="${SYSTEM_INFO.osName}"\n`;
+    } else if (osRelease.includes('CyberLinux')) {
+      osRelease = osRelease
+        .replace(/^NAME=.*$/m, `NAME="${SYSTEM_INFO.osName}"`)
+        .replace(/^VERSION=.*$/m, 'VERSION="1.0"')
+        .replace(/^ID=.*$/m, 'ID=pandaos')
+        .replace(/^PRETTY_NAME=.*$/m, `PRETTY_NAME="${SYSTEM_INFO.osName}"`);
+    }
+    writeSystemFile('/etc/os-release', osRelease);
+
+    const existingPasswd = readSystemFile('/etc/passwd');
+    const remainingPasswd = existingPasswd.split('\n')
+      .filter((line) => line && !['kiddy', 'student'].includes(line.split(':', 1)[0]));
+    const kiddy = this.users.getUser(SYSTEM_INFO.username);
+    const student = this.users.getUser('student');
+    remainingPasswd.push(
+      `${kiddy.name}:x:${kiddy.uid}:${kiddy.gid}:${kiddy.realname}:${kiddy.home}:${kiddy.shell}`,
+      `${student.name}:x:${student.uid}:${student.gid}:${student.realname}:${student.home}:${student.shell}`
+    );
+    writeSystemFile('/etc/passwd', `${remainingPasswd.join('\n')}\n`);
+
+    let shadow = readSystemFile('/etc/shadow');
+    if (!shadow.split('\n').some((line) => line.startsWith(`${SYSTEM_INFO.username}:`))) {
+      shadow += `${SYSTEM_INFO.username}:$6$pandaos$hashedkiddypass...:19500:0:99999:7:::\n`;
+      writeSystemFile('/etc/shadow', shadow, 0o600);
+    }
+
+    let sudoers = readSystemFile('/etc/sudoers');
+    if (!sudoers.split('\n').some((line) => line.startsWith(`${SYSTEM_INFO.username} `))) {
+      sudoers += `${SYSTEM_INFO.username} ALL=(ALL) NOPASSWD: ALL\n`;
+      writeSystemFile('/etc/sudoers', sudoers, 0o440);
+    }
   }
 
   ensureForensicImages() {
-    const picturesPath = '/home/student/Pictures';
-    const pictures = this.getNode(picturesPath);
-    if (!pictures || pictures.type !== 'dir') return;
+    for (const [home, owner] of [[SYSTEM_INFO.home, SYSTEM_INFO.username], ['/home/student', 'student']]) {
+      const picturesPath = `${home}/Pictures`;
+      const pictures = this.getNode(picturesPath);
+      if (!pictures || pictures.type !== 'dir') continue;
 
-    for (const image of FORENSIC_SAMPLE_IMAGES) {
-      const path = `${picturesPath}/${image.name}`;
-      if (!this.getNode(path)) {
-        this.rawCreateFile(path, image.content, 0o644, 'student', 'student');
+      for (const image of FORENSIC_SAMPLE_IMAGES) {
+        const path = `${picturesPath}/${image.name}`;
+        if (!this.getNode(path)) {
+          this.rawCreateFile(path, image.content, 0o644, owner, owner);
+        }
+      }
+    }
+  }
+
+  ensureUserPhotos() {
+    for (const [home, owner] of [[SYSTEM_INFO.home, SYSTEM_INFO.username], ['/home/student', 'student']]) {
+      const picturesPath = `${home}/Pictures`;
+      const pictures = this.getNode(picturesPath);
+      if (!pictures || pictures.type !== 'dir') continue;
+
+      for (const image of USER_PHOTO_ASSETS) {
+        const path = `${picturesPath}/${image.name}`;
+        if (!this.getNode(path)) {
+          this.rawCreateFile(path, '', 0o644, owner, owner, false, {
+            assetId: image.assetId,
+            size: image.size
+          });
+        }
       }
     }
   }
@@ -260,7 +398,7 @@ for p in ports:
     return curr;
   }
 
-  rawCreateFile(path, content = '', perms = 0o644, owner = 'student', group = 'student', suid = false) {
+  rawCreateFile(path, content = '', perms = 0o644, owner = SYSTEM_INFO.username, group = SYSTEM_INFO.username, suid = false, fileOptions = {}) {
     const norm = PathValidator.normalize(path);
     const { dirname, basename } = PathValidator.split(norm);
     const parent = this.rawMkdir(dirname);
@@ -271,6 +409,8 @@ for p in ports:
 
     const node = new VFSNode(basename, 'file', {
       content: content.substring(0, SecurityLimits.MAX_FILE_SIZE_BYTES),
+      size: fileOptions.size,
+      assetId: fileOptions.assetId,
       permissions: perms,
       owner,
       group,
@@ -284,8 +424,8 @@ for p in ports:
   /**
    * Find node by absolute or relative path
    */
-  getNode(path, cwd = '/') {
-    const norm = PathValidator.normalize(path, cwd);
+  getNode(path, cwd = '/', homePath = SYSTEM_INFO.home) {
+    const norm = PathValidator.normalize(path, cwd, homePath);
     if (norm === '/') return this.root;
 
     const segments = norm.split('/').filter(Boolean);
@@ -298,7 +438,7 @@ for p in ports:
       curr = curr.children.get(seg);
       // Handle symlink resolution if encountered
       if (curr.type === 'symlink' && curr.target) {
-        return this.getNode(curr.target, cwd);
+        return this.getNode(curr.target, cwd, homePath);
       }
     }
     return curr;
@@ -309,7 +449,7 @@ for p in ports:
    */
   readFile(path, cwd = '/', userObj = null) {
     const user = userObj || this.users.getCurrentUser();
-    const node = this.getNode(path, cwd);
+    const node = this.getNode(path, cwd, user.home);
     if (!node) {
       return { success: false, error: 'No such file or directory' };
     }
@@ -328,14 +468,14 @@ for p in ports:
    */
   writeFile(path, content, cwd = '/', userObj = null, append = false) {
     const user = userObj || this.users.getCurrentUser();
-    const norm = PathValidator.normalize(path, cwd);
+    const norm = PathValidator.normalize(path, cwd, user.home);
     const { dirname, basename } = PathValidator.split(norm);
 
     if (!PathValidator.isValidFilename(basename)) {
       return { success: false, error: 'Invalid filename' };
     }
 
-    const parentNode = this.getNode(dirname, cwd);
+    const parentNode = this.getNode(dirname, cwd, user.home);
     if (!parentNode) {
       return { success: false, error: `Cannot write to '${path}': Directory does not exist` };
     }
@@ -360,6 +500,7 @@ for p in ports:
       }
       existing.content = newContent;
       existing.size = newContent.length;
+      existing.assetId = null;
       existing.mtime = new Date();
       sysEvents.emit('vfs:change', { type: 'modify', path: norm, node: existing });
       return { success: true, node: existing };
@@ -376,8 +517,8 @@ for p in ports:
     const newNode = new VFSNode(basename, 'file', {
       content,
       size: content.length,
-      owner: user.name || 'student',
-      group: (user.groups && user.groups[0]) || 'student',
+      owner: user.name || SYSTEM_INFO.username,
+      group: (user.groups && user.groups[0]) || SYSTEM_INFO.username,
       permissions: 0o644
     });
     parentNode.children.set(basename, newNode);
@@ -391,7 +532,7 @@ for p in ports:
    */
   createDirectory(path, cwd = '/', userObj = null, options = {}) {
     const user = userObj || this.users.getCurrentUser();
-    const norm = PathValidator.normalize(path, cwd);
+    const norm = PathValidator.normalize(path, cwd, user.home);
     const { dirname, basename } = PathValidator.split(norm);
 
     if (norm === '/') {
@@ -401,7 +542,7 @@ for p in ports:
       return { success: false, error: 'Invalid directory name' };
     }
 
-    let parentNode = this.getNode(dirname, cwd);
+    let parentNode = this.getNode(dirname, cwd, user.home);
     if (!parentNode && options.parents) {
       parentNode = this.rawMkdir(dirname, 0o755, user.name, user.groups[0] || user.name);
     }
@@ -424,8 +565,8 @@ for p in ports:
     }
 
     const dirNode = new VFSNode(basename, 'dir', {
-      owner: user.name || 'student',
-      group: (user.groups && user.groups[0]) || 'student',
+      owner: user.name || SYSTEM_INFO.username,
+      group: (user.groups && user.groups[0]) || SYSTEM_INFO.username,
       permissions: options.mode !== undefined ? options.mode : 0o755
     });
     parentNode.children.set(basename, dirNode);
@@ -439,13 +580,13 @@ for p in ports:
    */
   removeNode(path, cwd = '/', userObj = null, recursive = false) {
     const user = userObj || this.users.getCurrentUser();
-    const norm = PathValidator.normalize(path, cwd);
+    const norm = PathValidator.normalize(path, cwd, user.home);
     if (norm === '/') {
       return { success: false, error: 'Cannot remove root directory' };
     }
 
     const { dirname, basename } = PathValidator.split(norm);
-    const parentNode = this.getNode(dirname, cwd);
+    const parentNode = this.getNode(dirname, cwd, user.home);
     if (!parentNode || parentNode.type !== 'dir') {
       return { success: false, error: 'No such file or directory' };
     }
@@ -475,8 +616,8 @@ for p in ports:
    */
   listDirectory(path, cwd = '/', userObj = null) {
     const user = userObj || this.users.getCurrentUser();
-    const norm = PathValidator.normalize(path, cwd);
-    const node = this.getNode(norm);
+    const norm = PathValidator.normalize(path, cwd, user.home);
+    const node = this.getNode(norm, '/', user.home);
 
     if (!node) {
       return { success: false, error: 'No such file or directory' };
@@ -510,8 +651,8 @@ for p in ports:
    */
   chmod(path, modeStr, cwd = '/', userObj = null) {
     const user = userObj || this.users.getCurrentUser();
-    const norm = PathValidator.normalize(path, cwd);
-    const node = this.getNode(norm);
+    const norm = PathValidator.normalize(path, cwd, user.home);
+    const node = this.getNode(norm, '/', user.home);
 
     if (!node) return { success: false, error: 'No such file or directory' };
     if (user.uid !== 0 && node.owner !== user.name) {
@@ -535,8 +676,8 @@ for p in ports:
    */
   chown(path, owner, group = null, cwd = '/', userObj = null) {
     const user = userObj || this.users.getCurrentUser();
-    const norm = PathValidator.normalize(path, cwd);
-    const node = this.getNode(norm);
+    const norm = PathValidator.normalize(path, cwd, user.home);
+    const node = this.getNode(norm, '/', user.home);
 
     if (!node) return { success: false, error: 'No such file or directory' };
     if (user.uid !== 0) {
@@ -556,18 +697,18 @@ for p in ports:
    */
   copyNode(srcPath, destPath, cwd = '/', userObj = null, recursive = false) {
     const user = userObj || this.users.getCurrentUser();
-    const srcNode = this.getNode(srcPath, cwd);
+    const srcNode = this.getNode(srcPath, cwd, user.home);
     if (!srcNode) return { success: false, error: 'No such file or directory' };
 
     if (srcNode.type === 'dir' && !recursive) {
       return { success: false, error: `-r not specified; omitting directory '${srcPath}'` };
     }
 
-    const normDest = PathValidator.normalize(destPath, cwd);
+    const normDest = PathValidator.normalize(destPath, cwd, user.home);
     let targetDir = normDest;
     let targetName = PathValidator.split(srcPath).basename;
 
-    const destNode = this.getNode(normDest);
+    const destNode = this.getNode(normDest, '/', user.home);
     if (destNode && destNode.type === 'dir') {
       targetDir = normDest;
     } else {
@@ -582,7 +723,12 @@ for p in ports:
   deepCopy(srcNode, targetDir, targetName, user) {
     const targetPath = PathValidator.normalize(targetDir + '/' + targetName);
     if (srcNode.type === 'file') {
-      return this.writeFile(targetPath, srcNode.content, '/', user);
+      const result = this.writeFile(targetPath, srcNode.content, '/', user);
+      if (result.success && srcNode.assetId) {
+        result.node.assetId = srcNode.assetId;
+        result.node.size = srcNode.size;
+      }
+      return result;
     } else if (srcNode.type === 'dir') {
       const mkdirRes = this.createDirectory(targetPath, '/', user);
       if (!mkdirRes.success) return mkdirRes;
@@ -600,18 +746,18 @@ for p in ports:
    */
   moveNode(srcPath, destPath, cwd = '/', userObj = null) {
     const user = userObj || this.users.getCurrentUser();
-    const normSrc = PathValidator.normalize(srcPath, cwd);
-    const srcNode = this.getNode(normSrc);
+    const normSrc = PathValidator.normalize(srcPath, cwd, user.home);
+    const srcNode = this.getNode(normSrc, '/', user.home);
     if (!srcNode) return { success: false, error: `Cannot stat '${srcPath}': No such file or directory` };
 
-    const normDest = PathValidator.normalize(destPath, cwd);
+    const normDest = PathValidator.normalize(destPath, cwd, user.home);
     const { dirname: srcDir, basename: srcName } = PathValidator.split(normSrc);
-    const srcParent = this.getNode(srcDir);
+    const srcParent = this.getNode(srcDir, '/', user.home);
 
     let targetDir = normDest;
     let targetName = srcName;
 
-    const destNode = this.getNode(normDest);
+    const destNode = this.getNode(normDest, '/', user.home);
     if (destNode && destNode.type === 'dir') {
       targetDir = normDest;
       targetName = srcName;
@@ -621,7 +767,11 @@ for p in ports:
       targetName = split.basename;
     }
 
-    const destParent = this.getNode(targetDir);
+    if (!PathValidator.isValidFilename(targetName)) {
+      return { success: false, error: 'Invalid destination filename' };
+    }
+
+    const destParent = this.getNode(targetDir, '/', user.home);
     if (!destParent || destParent.type !== 'dir') {
       return { success: false, error: `Target directory '${targetDir}' does not exist` };
     }
@@ -654,7 +804,8 @@ for p in ports:
         suid: node.suid,
         sgid: node.sgid,
         sticky: node.sticky,
-        content: node.content || ''
+        content: node.content || '',
+        assetId: node.assetId || null
       };
       if (node.type === 'dir') {
         obj.children = {};
@@ -677,45 +828,90 @@ for p in ports:
    */
   importFromJSON(jsonString) {
     try {
+      if (typeof jsonString !== 'string' || jsonString.length > SecurityLimits.MAX_BACKUP_SIZE_BYTES) {
+        return { success: false, error: 'Filesystem image is invalid or exceeds the size limit' };
+      }
       const data = JSON.parse(jsonString);
-      if (!data || !data.root || data.root.type !== 'dir') {
+      if (!data || data.version !== 1 || !data.root || data.root.type !== 'dir') {
         return { success: false, error: 'Invalid filesystem image format' };
       }
 
       let count = 0;
-      const deserializeNode = (obj) => {
-        if (!obj || typeof obj !== 'object') return null;
+      const deserializeNode = (obj, depth = 0, expectedName = null, isRoot = false) => {
+        if (!obj || typeof obj !== 'object' || Array.isArray(obj)) {
+          throw new Error('Invalid filesystem node in imported data');
+        }
+        if (depth > SecurityLimits.MAX_PATH_DEPTH) {
+          throw new Error('Filesystem path depth limit exceeded in imported data');
+        }
         count++;
         if (count > SecurityLimits.MAX_FILESYSTEM_NODES) {
           throw new Error('Filesystem node limit exceeded in imported data');
         }
 
-        const node = new VFSNode(obj.name || '', obj.type || 'file', {
-          permissions: typeof obj.permissions === 'number' ? obj.permissions : 0o644,
-          owner: String(obj.owner || 'student'),
-          group: String(obj.group || 'student'),
+        if (!['dir', 'file'].includes(obj.type)) {
+          throw new Error('Invalid filesystem node type in imported data');
+        }
+        const name = isRoot ? '' : obj.name;
+        if (isRoot ? (obj.name !== undefined && obj.name !== '') : !PathValidator.isValidFilename(name)) {
+          throw new Error('Invalid filename in imported filesystem data');
+        }
+        if (expectedName !== null && name !== expectedName) {
+          throw new Error('Filesystem entry name does not match its directory key');
+        }
+
+        const content = obj.content === undefined ? '' : obj.content;
+        if (typeof content !== 'string' || content.length > SecurityLimits.MAX_FILE_SIZE_BYTES) {
+          throw new Error('Invalid or oversized file content in imported data');
+        }
+        if (obj.permissions !== undefined &&
+          (!Number.isInteger(obj.permissions) || obj.permissions < 0 || obj.permissions > 0o7777)) {
+          throw new Error('Invalid permissions in imported data');
+        }
+        if (obj.size !== undefined &&
+          (!Number.isInteger(obj.size) || obj.size < 0 || obj.size > SecurityLimits.MAX_FILE_SIZE_BYTES)) {
+          throw new Error('Invalid file size in imported data');
+        }
+        if (obj.mtime !== undefined && (typeof obj.mtime !== 'string' || Number.isNaN(Date.parse(obj.mtime)))) {
+          throw new Error('Invalid modification time in imported data');
+        }
+        const owner = obj.owner === undefined ? SYSTEM_INFO.username : obj.owner;
+        const group = obj.group === undefined ? SYSTEM_INFO.username : obj.group;
+        if (!PathValidator.isValidFilename(owner) || !PathValidator.isValidFilename(group)) {
+          throw new Error('Invalid owner or group in imported data');
+        }
+
+        const node = new VFSNode(name, obj.type, {
+          permissions: obj.permissions === undefined ? 0o644 : obj.permissions,
+          owner,
+          group,
           size: typeof obj.size === 'number' ? obj.size : 0,
           mtime: obj.mtime,
-          content: typeof obj.content === 'string' ? obj.content.substring(0, SecurityLimits.MAX_FILE_SIZE_BYTES) : '',
+          content,
+          assetId: typeof obj.assetId === 'string' && /^[a-z0-9-]+$/.test(obj.assetId) ? obj.assetId : null,
           suid: !!obj.suid,
           sgid: !!obj.sgid,
           sticky: !!obj.sticky
         });
 
-        if (obj.type === 'dir' && obj.children && typeof obj.children === 'object') {
+        if (obj.type === 'dir') {
+          if (!obj.children || typeof obj.children !== 'object' || Array.isArray(obj.children)) {
+            throw new Error('Invalid directory entries in imported data');
+          }
           for (const [k, v] of Object.entries(obj.children)) {
             // Guard against prototype pollution keys
             if (k === '__proto__' || k === 'constructor' || k === 'prototype') continue;
-            const childNode = deserializeNode(v);
-            if (childNode) {
-              node.children.set(k, childNode);
+            if (!PathValidator.isValidFilename(k)) {
+              throw new Error('Invalid directory entry name in imported data');
             }
+            const childNode = deserializeNode(v, depth + 1, k);
+            node.children.set(k, childNode);
           }
         }
         return node;
       };
 
-      this.root = deserializeNode(data.root);
+      this.root = deserializeNode(data.root, 0, null, true);
       this.nodeCount = count;
       sysEvents.emit('vfs:change', { type: 'reload' });
       return { success: true, nodeCount: count };

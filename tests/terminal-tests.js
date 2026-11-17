@@ -28,14 +28,18 @@ describe('Terminal & Shell Interpreter Tests', () => {
   it('executes basic commands (whoami, id, pwd)', async () => {
     const resWhoami = await shell.execute('whoami');
     expect(resWhoami.exitCode).toBe(0);
-    expect(resWhoami.stdout.trim()).toBe('student');
+    expect(resWhoami.stdout.trim()).toBe('kiddy');
+
+    const resId = await shell.execute('id');
+    expect(resId.stdout).toContain('uid=1000(kiddy)');
+    expect(resId.stdout).toContain('110(netdev)');
 
     const resPwd = await shell.execute('pwd');
     expect(resPwd.exitCode).toBe(0);
-    expect(resPwd.stdout.trim()).toBe('/home/student');
+    expect(resPwd.stdout.trim()).toBe('/home/kiddy');
   });
 
-  it('starts as student, enters root with sudo, and exits back to student', async () => {
+  it('starts as kiddy, enters root with sudo, and exits back to kiddy', async () => {
     const testUsers = new VirtualUsers();
     const testVfs = new VirtualFileSystem(testUsers);
     const testNetwork = new VirtualNetwork();
@@ -43,17 +47,19 @@ describe('Terminal & Shell Interpreter Tests', () => {
     registerAllCommands(testRegistry, testVfs, testUsers, new VirtualProcesses(), testNetwork);
     const testShell = new ShellInterpreter(testRegistry, testVfs, testUsers, new VirtualProcesses(), testNetwork);
 
-    expect(testShell.getPrompt()).toContain('student@');
+    expect(testShell.getPrompt()).toContain('kiddy@');
     const rootResult = await testShell.execute('sudo -i');
     expect(rootResult.exitCode).toBe(0);
     expect(testShell.getPrompt()).toContain('root@');
     expect(testShell.cwd).toBe('/root');
     expect(testShell.env.USER).toBe('root');
+    await testShell.execute('cd ~');
+    expect(testShell.cwd).toBe('/root');
 
     await testShell.execute('exit');
-    expect(testShell.getPrompt()).toContain('student@');
-    expect(testShell.cwd).toBe('/home/student');
-    expect(testShell.env.USER).toBe('student');
+    expect(testShell.getPrompt()).toContain('kiddy@');
+    expect(testShell.cwd).toBe('/home/kiddy');
+    expect(testShell.env.USER).toBe('kiddy');
 
     const exitResult = await testShell.execute('exit');
     expect(exitResult.exitShell).toBe(true);
@@ -65,15 +71,18 @@ describe('Terminal & Shell Interpreter Tests', () => {
     }
 
     const hostname = await shell.execute('hostnamectl status');
-    expect(hostname.stdout).toContain('Static hostname: cyberlinux');
+    expect(hostname.stdout).toContain('Static hostname: PandaHack');
     const neofetch = await shell.execute('neofetch');
-    expect(neofetch.stdout).toContain('OS: CyberLinux');
+    expect(neofetch.stdout).toContain('OS: Panda OS');
     const fastfetch = await shell.execute('fastfetch');
-    expect(fastfetch.stdout).toContain('User: student');
+    expect(fastfetch.stdout).toContain('User: kiddy');
+    expect(fastfetch.stdout).toContain('CPU: 20');
+    expect(fastfetch.stdout).toContain('Memory: 16 GiB');
+    expect(fastfetch.stdout).toContain('Storage: 512 GB');
     const ftp = await shell.execute('ftp 192.168.1.10');
     expect(ftp.stdout).toContain('220 (vsftpd 2.3.4)');
     const nano = await shell.execute('nano notes.txt');
-    expect(nano.stdout).toContain('/home/student/notes.txt');
+    expect(nano.stdout).toContain('/home/kiddy/notes.txt');
   });
 
   it('reads hidden flags from virtual image metadata with exiftool', async () => {
@@ -85,7 +94,7 @@ describe('Terminal & Shell Interpreter Tests', () => {
   it('supports pipelines (cat /etc/passwd | grep student)', async () => {
     const res = await shell.execute('cat /etc/passwd | grep student');
     expect(res.exitCode).toBe(0);
-    expect(res.stdout).toContain('student:x:1000:1000');
+    expect(res.stdout).toContain('student:x:1001:1001');
   });
 
   it('supports file redirection (echo "secret" > /tmp/flag.txt)', async () => {

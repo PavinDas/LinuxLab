@@ -1,4 +1,5 @@
 import { Sanitizer } from '../security/sanitizer.js';
+import { SecurityLimits } from '../security/limits.js';
 import { sysEvents } from '../core/event-bus.js';
 
 /**
@@ -6,9 +7,10 @@ import { sysEvents } from '../core/event-bus.js';
  * Personalization, themes, cute wallpapers, user management, backup/restore, and reset.
  */
 export class SettingsApp {
-  constructor(storageManager, users) {
+  constructor(storageManager, users, dialogs) {
     this.storage = storageManager;
     this.users = users;
+    this.dialogs = dialogs;
     this.activeSection = 'appearance'; // 'appearance' | 'wallpapers' | 'user' | 'backup'
   }
 
@@ -102,7 +104,7 @@ export class SettingsApp {
   renderWallpapers() {
     const title = Sanitizer.createElement('h3', {}, 'Desktop Wallpapers');
     const desc = Sanitizer.createElement('p', { className: 'settings-desc' },
-      'Select an original cartoon wallpaper featuring the CyberLinux mascot and designs.'
+      'Choose a wallpaper for your desktop.'
     );
 
     const wallpapersGrid = Sanitizer.createElement('div', { className: 'wallpapers-grid' });
@@ -112,7 +114,11 @@ export class SettingsApp {
       { id: 'mascot', name: 'Panda Mascot & Laptop', previewCls: 'wp-mascot' },
       { id: 'cyber-dark', name: 'Cyber Neon Grid', previewCls: 'wp-cyber' },
       { id: 'pastel-dawn', name: 'Pastel Sunrise', previewCls: 'wp-pastel' },
-      { id: 'minimal-slate', name: 'Minimal Slate', previewCls: 'wp-slate' }
+      { id: 'minimal-slate', name: 'Minimal Slate', previewCls: 'wp-slate' },
+      { id: 'astronaut-jellyfish', name: 'Astronaut & Jellyfish', previewCls: 'wp-astronaut' },
+      { id: 'neon-city', name: 'Neon Night City', previewCls: 'wp-neon-city' },
+      { id: 'samurai-sunset', name: 'Samurai Sunset', previewCls: 'wp-samurai' },
+      { id: 'minimalist-river', name: 'Minimalist River', previewCls: 'wp-river' }
     ];
 
     for (const wp of wallpapers) {
@@ -142,7 +148,7 @@ export class SettingsApp {
     const card = Sanitizer.createElement('div', { className: 'user-profile-card' }, [
       Sanitizer.createElement('div', { className: 'user-avatar' }, '🐼'),
       Sanitizer.createElement('div', { className: 'user-details' }, [
-        Sanitizer.createElement('h4', {}, user.realname || 'Cybersecurity Student'),
+        Sanitizer.createElement('h4', {}, user.realname || 'Panda OS User'),
         Sanitizer.createElement('div', {}, `Username: ${user.name}`),
         Sanitizer.createElement('div', {}, `UID: ${user.uid} | GID: ${user.gid}`),
         Sanitizer.createElement('div', {}, `Home Directory: ${user.home}`),
@@ -183,7 +189,7 @@ export class SettingsApp {
         '📤 Import JSON',
         Sanitizer.createElement('input', {
           type: 'file',
-          accept: '.json',
+          accept: '.json,application/json',
           style: { display: 'none' },
           onChange: (e) => this.handleImport(e)
         })
@@ -215,7 +221,7 @@ export class SettingsApp {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `cyberlinux-backup-${new Date().toISOString().substring(0, 10)}.json`;
+    a.download = `panda-os-backup-${new Date().toISOString().substring(0, 10)}.json`;
     a.click();
     URL.revokeObjectURL(url);
   }
@@ -223,26 +229,49 @@ export class SettingsApp {
   handleImport(evt) {
     const file = evt.target.files && evt.target.files[0];
     if (!file) return;
+    if (file.size > SecurityLimits.MAX_BACKUP_SIZE_BYTES) {
+      evt.target.value = '';
+      this.dialogs.alert({
+        title: 'Backup Is Too Large',
+        message: `Choose a backup smaller than ${Math.floor(SecurityLimits.MAX_BACKUP_SIZE_BYTES / (1024 * 1024))} MB.`
+      });
+      return;
+    }
 
     const reader = new FileReader();
-    reader.onload = (e) => {
+    reader.onload = async (e) => {
       const content = e.target.result;
       const res = this.storage.importFullBackup(content);
       if (res.success) {
-        alert('Simulator backup restored successfully! Reloading...');
+        await this.dialogs.alert({
+          title: 'Backup Restored',
+          message: 'Simulator backup restored successfully. Panda OS will now reload.'
+        });
         window.location.reload();
       } else {
-        alert(`Failed to import backup: ${res.error}`);
+        await this.dialogs.alert({ title: 'Could Not Restore Backup', message: res.error });
       }
+    };
+    reader.onerror = () => {
+      this.dialogs.alert({ title: 'Could Not Read Backup', message: 'The selected backup file could not be read.' });
     };
     reader.readAsText(file);
   }
 
-  handleReset() {
-    if (confirm('Are you sure you want to completely reset CyberLinux? All custom files and progress will be restored to defaults.')) {
-      this.storage.resetAll();
-      alert('CyberLinux reset successfully! Reloading...');
-      window.location.reload();
-    }
+  async handleReset() {
+    const confirmed = await this.dialogs.confirm({
+      title: 'Reset Panda OS?',
+      message: 'All custom files and progress will be restored to defaults.',
+      confirmLabel: 'Reset',
+      danger: true
+    });
+    if (!confirmed) return;
+
+    this.storage.resetAll();
+    await this.dialogs.alert({
+      title: 'Panda OS Reset',
+      message: 'Panda OS has been reset and will now reload.'
+    });
+    window.location.reload();
   }
 }

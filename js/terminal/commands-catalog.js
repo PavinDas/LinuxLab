@@ -2,6 +2,7 @@ import { PathValidator } from '../security/path-validator.js';
 import { VirtualPermissions } from '../core/virtual-permissions.js';
 import { SafeMath } from '../security/safe-math.js';
 import { registerExtendedCommands } from './commands-extended.js';
+import { SYSTEM_INFO } from '../core/system-info.js';
 
 /**
  * Register all commands from the reference syllabus into the CommandRegistry
@@ -26,7 +27,7 @@ export function registerAllCommands(registry, vfs, users, processes, network) {
     options: [],
     practicalUse: 'Quickly check what user account you are running as, especially after privilege escalation or su.',
     example: 'whoami',
-    expectedOutput: 'student',
+    expectedOutput: SYSTEM_INFO.username,
     execute: (args, ctx) => ({ exitCode: 0, stdout: `${ctx.user.name}\n` })
   });
 
@@ -39,7 +40,7 @@ export function registerAllCommands(registry, vfs, users, processes, network) {
     options: ['-u (show UID)', '-g (show GID)', '-G (show all groups)', '-n (show names)'],
     practicalUse: 'Critical command for identifying group memberships (such as sudo, docker, adm, lxd) during privilege escalation.',
     example: 'id',
-    expectedOutput: 'uid=1000(student) gid=1000(student) groups=1000(student),4(adm),27(sudo)',
+    expectedOutput: 'uid=1000(kiddy) gid=1000(kiddy) groups=1000(kiddy),27(sudo),4(adm),110(netdev)',
     execute: (args, ctx) => {
       const targetUser = args[0] ? users.getUser(args[0]) : ctx.user;
       if (!targetUser) return { exitCode: 1, stderr: `id: '${args[0]}': no such user\n` };
@@ -65,7 +66,7 @@ export function registerAllCommands(registry, vfs, users, processes, network) {
     options: ['-I (display IP addresses)'],
     practicalUse: 'Discover the machine name in enterprise networks and active directory environments.',
     example: 'hostname',
-    expectedOutput: 'cyberlinux',
+    expectedOutput: 'PandaHack',
     execute: (args, ctx) => {
       if (args.includes('-I')) {
         return { exitCode: 0, stdout: '192.168.1.50 10.0.0.15 \n' };
@@ -82,7 +83,7 @@ export function registerAllCommands(registry, vfs, users, processes, network) {
     options: ['status (show system information)', 'set-hostname <name> (set the static hostname)'],
     practicalUse: 'Inspect the machine identity or set its hostname from an administrative shell.',
     example: 'hostnamectl status',
-    expectedOutput: ' Static hostname: cyberlinux\n Operating System: CyberLinux 2.0 LTS (Panda Edition)',
+    expectedOutput: ' Static hostname: PandaHack\nOperating System: Panda OS',
     execute: (args, ctx) => {
       if (args[0] === 'set-hostname') {
         const hostname = args[1];
@@ -100,7 +101,7 @@ export function registerAllCommands(registry, vfs, users, processes, network) {
       }
 
       const hostname = network.hostname;
-      const output = ` Static hostname: ${hostname}\n       Icon name: computer\n         Chassis: desktop\n      Machine ID: 00000000000000000000000000000000\n         Boot ID: 11111111111111111111111111111111\nOperating System: CyberLinux 2.0 LTS (Panda Edition)\n          Kernel: Linux 6.8.0-cyber-generic\n    Architecture: x86-64\n`;
+      const output = ` Static hostname: ${hostname}\n       Icon name: computer\n         Chassis: desktop\n      Machine ID: 00000000000000000000000000000000\n         Boot ID: 11111111111111111111111111111111\nOperating System: ${SYSTEM_INFO.osName}\n          Kernel: Linux 6.8.0-cyber-generic\n    Architecture: x86-64\n`;
       return { exitCode: 0, stdout: output };
     }
   });
@@ -113,11 +114,11 @@ export function registerAllCommands(registry, vfs, users, processes, network) {
     options: [],
     practicalUse: 'Quickly display the simulated operating system, shell, and user information.',
     example: 'neofetch',
-    expectedOutput: 'CyberLinux 2.0 LTS (Panda Edition)\n',
+    expectedOutput: 'Panda OS\n',
     isSimulation: true,
     execute: (args, ctx) => ({
       exitCode: 0,
-      stdout: `       .--.        ${ctx.user.name}@${network.hostname}\n      |o_o |       -------------------------\n      |:_/ |       OS: CyberLinux 2.0 LTS (Panda Edition)\n     //   \\ \\      Kernel: Linux 6.8.0-cyber-generic\n    (|     | )     Shell: ${ctx.user.shell}\n   /'\\_   _/\`\\     Terminal: xterm-256color\n   \\___)=(___/     CPU: Virtual CyberLinux CPU\n`
+      stdout: `       .--.        ${ctx.user.name}@${network.hostname}\n      |o_o |       -------------------------\n      |:_/ |       OS: ${SYSTEM_INFO.osName}\n     //   \\ \\      Kernel: Linux 6.8.0-cyber-generic\n    (|     | )     Shell: ${ctx.user.shell}\n   /'\\_   _/\`\\     Terminal: xterm-256color\n   \\___)=(___/     CPU: ${SYSTEM_INFO.cpuCount} virtual CPUs\n`
     })
   });
 
@@ -129,11 +130,11 @@ export function registerAllCommands(registry, vfs, users, processes, network) {
     options: [],
     practicalUse: 'Show a concise summary of the simulated system and current user.',
     example: 'fastfetch',
-    expectedOutput: 'OS: CyberLinux 2.0 LTS (Panda Edition)\n',
+    expectedOutput: 'OS: Panda OS\n',
     isSimulation: true,
     execute: (args, ctx) => ({
       exitCode: 0,
-      stdout: `OS: CyberLinux 2.0 LTS (Panda Edition)\nHost: ${network.hostname}\nKernel: Linux 6.8.0-cyber-generic\nShell: ${ctx.user.shell}\nUser: ${ctx.user.name}\nTerminal: xterm-256color\n`
+      stdout: `OS: ${SYSTEM_INFO.osName}\nHost: ${network.hostname}\nKernel: Linux 6.8.0-cyber-generic\nShell: ${ctx.user.shell}\nUser: ${ctx.user.name}\nCPU: ${SYSTEM_INFO.cpuCount}\nMemory: ${SYSTEM_INFO.memoryMB / 1024} GiB\nStorage: ${SYSTEM_INFO.storageGB} GB\nTerminal: xterm-256color\n`
     })
   });
 
@@ -172,10 +173,10 @@ export function registerAllCommands(registry, vfs, users, processes, network) {
     options: ['-a (all information)', '-r (kernel release)', '-m (machine architecture)', '-s (kernel name)'],
     practicalUse: 'Primary enumeration step to find kernel exploits (Dirty COW, OverlayFS, etc.) matching exact kernel versions.',
     example: 'uname -a',
-    expectedOutput: 'Linux cyberlinux 6.8.0-cyber-generic #1 SMP PREEMPT_DYNAMIC x86_64 GNU/Linux',
+    expectedOutput: 'Linux PandaHack 6.8.0-cyber-generic #1 SMP PREEMPT_DYNAMIC x86_64 GNU/Linux',
     execute: (args, ctx) => {
       if (args.includes('-a') || args.length === 0) {
-        return { exitCode: 0, stdout: 'Linux cyberlinux 6.8.0-cyber-generic #1 SMP PREEMPT_DYNAMIC x86_64 GNU/Linux\n' };
+        return { exitCode: 0, stdout: `Linux ${network.hostname} 6.8.0-cyber-generic #1 SMP PREEMPT_DYNAMIC x86_64 GNU/Linux\n` };
       }
       if (args.includes('-r')) return { exitCode: 0, stdout: '6.8.0-cyber-generic\n' };
       if (args.includes('-m')) return { exitCode: 0, stdout: 'x86_64\n' };
@@ -192,7 +193,7 @@ export function registerAllCommands(registry, vfs, users, processes, network) {
     options: ['-P (physical directory)', '-L (logical directory)'],
     practicalUse: 'Determine exact absolute path before executing sensitive file operations or exploits.',
     example: 'pwd',
-    expectedOutput: '/home/student',
+    expectedOutput: SYSTEM_INFO.home,
     execute: (args, ctx) => ({ exitCode: 0, stdout: `${ctx.cwd}\n` })
   });
 
@@ -208,7 +209,7 @@ export function registerAllCommands(registry, vfs, users, processes, network) {
     expectedOutput: 'logout',
     execute: (args, ctx) => {
       if (users.isRoot()) {
-        users.setCurrentUser('student');
+        users.setCurrentUser(SYSTEM_INFO.username);
         const cwd = users.getCurrentUser().home;
         return { exitCode: 0, stdout: 'logout\n', newCwd: cwd };
       }
@@ -389,11 +390,11 @@ export function registerAllCommands(registry, vfs, users, processes, network) {
     expectedOutput: '',
     execute: (args, ctx) => {
       let target = args[0] || '~';
-      if (target === '~') target = ctx.user.home || '/home/student';
+      if (target === '~') target = ctx.user.home || SYSTEM_INFO.home;
       if (target === '-') target = ctx.env.OLDPWD || ctx.cwd;
 
-      const norm = PathValidator.normalize(target, ctx.cwd);
-      const node = vfs.getNode(norm);
+      const norm = PathValidator.normalize(target, ctx.cwd, ctx.user.home);
+      const node = vfs.getNode(norm, '/', ctx.user.home);
       if (!node) {
         return { exitCode: 1, stderr: `cd: ${target}: No such file or directory\n` };
       }
@@ -472,8 +473,8 @@ export function registerAllCommands(registry, vfs, users, processes, network) {
       if (files.length === 0) return { exitCode: 1, stderr: 'touch: missing file operand\n' };
 
       for (const f of files) {
-        const norm = PathValidator.normalize(f, ctx.cwd);
-        const existing = vfs.getNode(norm);
+        const norm = PathValidator.normalize(f, ctx.cwd, ctx.user.home);
+        const existing = vfs.getNode(norm, '/', ctx.user.home);
         if (existing) {
           existing.mtime = new Date();
           existing.atime = new Date();
@@ -567,7 +568,7 @@ export function registerAllCommands(registry, vfs, users, processes, network) {
     options: ['-n (number all output lines)', '-b (number nonempty output lines)'],
     practicalUse: 'Read configurations, view /etc/passwd, examine notes, or dump text to terminal.',
     example: 'cat /etc/passwd',
-    expectedOutput: 'root:x:0:0:root:/root:/bin/bash\nstudent:x:1000:1000:Cybersecurity Student:/home/student:/bin/bash',
+    expectedOutput: `root:x:0:0:root:/root:/bin/bash\nkiddy:x:1000:1000:Panda OS User:${SYSTEM_INFO.home}:/bin/bash`,
     execute: (args, ctx) => {
       const numberLines = args.includes('-n');
       const files = args.filter(a => !a.startsWith('-'));
@@ -1092,7 +1093,7 @@ export function registerAllCommands(registry, vfs, users, processes, network) {
         }
       };
 
-      traverse(PathValidator.normalize(rootPath, ctx.cwd));
+      traverse(PathValidator.normalize(rootPath, ctx.cwd, ctx.user.home));
       return { exitCode: 0, stdout: results.join('\n') + (results.length ? '\n' : '') };
     }
   });
@@ -1109,7 +1110,7 @@ export function registerAllCommands(registry, vfs, users, processes, network) {
     expectedOutput: '├── Desktop\n│   └── welcome.txt\n├── Documents\n│   └── wordlist.txt\n',
     execute: (args, ctx) => {
       const target = args.find(a => !a.startsWith('-')) || ctx.cwd;
-      const startNode = vfs.getNode(target, ctx.cwd);
+      const startNode = vfs.getNode(target, ctx.cwd, ctx.user.home);
       if (!startNode) return { exitCode: 1, stderr: `tree: '${target}': No such file or directory\n` };
 
       const lines = [target];
@@ -1140,9 +1141,12 @@ export function registerAllCommands(registry, vfs, users, processes, network) {
     options: ['-h (human-readable)', '-T (show filesystem type)'],
     practicalUse: 'Check available storage, partition structures, and mount points.',
     example: 'df -h',
-    expectedOutput: 'Filesystem      Size  Used Avail Use% Mounted on\n/dev/sda1        40G  8.4G   30G  21% /',
+    expectedOutput: 'Filesystem      Size  Used Avail Use% Mounted on\n/dev/sda1       512G  8.4G  504G   2% /',
     execute: () => {
-      const out = 'Filesystem      Size  Used Avail Use% Mounted on\n/dev/sda1        40G  8.4G   30G  21% /\nudev            2.0G     0  2.0G   0% /dev\ntmpfs           392M  1.4M  391M   1% /run\n/dev/sda2       100G   24G   71G  26% /home\n';
+      const stats = processes.getOverallStats();
+      const available = (stats.totalDiskGB - stats.usedDiskGB).toFixed(0);
+      const usage = stats.diskUsagePercent.toFixed(0);
+      const out = `Filesystem      Size  Used Avail Use% Mounted on\n/dev/sda1       ${stats.totalDiskGB}G  ${stats.usedDiskGB}G  ${available}G   ${usage}% /\nudev             8.0G     0  8.0G   0% /dev\ntmpfs            3.2G  1.4M  3.2G   1% /run\n`;
       return { exitCode: 0, stdout: out };
     }
   });
@@ -1182,7 +1186,7 @@ export function registerAllCommands(registry, vfs, users, processes, network) {
         return { exitCode: 1, stderr: `file: cannot open '${target}': ${res.error}\n` };
       }
 
-      const node = vfs.getNode(target, ctx.cwd);
+      const node = vfs.getNode(target, ctx.cwd, ctx.user.home);
       let desc = 'ASCII text';
       if (node.type === 'dir') desc = 'directory';
       else if (target.endsWith('.pcap')) desc = 'tcpdump capture file (little-endian)';
@@ -1207,7 +1211,7 @@ export function registerAllCommands(registry, vfs, users, processes, network) {
     execute: (args, ctx) => {
       const file = args.find(a => !a.startsWith('-'));
       if (!file) return { exitCode: 1, stderr: 'stat: missing operand\n' };
-      const node = vfs.getNode(file, ctx.cwd);
+      const node = vfs.getNode(file, ctx.cwd, ctx.user.home);
       if (!node) return { exitCode: 1, stderr: `stat: cannot stat '${file}': No such file or directory\n` };
 
       const modeOctal = (node.permissions).toString(8).padStart(4, '0');
@@ -1253,7 +1257,7 @@ Change: ${node.ctime.toISOString()}
     options: [],
     practicalUse: 'Learn supported options and commands inside CyberLinux.',
     example: 'help',
-    expectedOutput: 'CyberLinux Interactive Shell Help\nType "man <command>" for detailed manual.',
+    expectedOutput: 'Panda OS Interactive Shell Help\nType "man <command>" for detailed manual.',
     execute: (args) => {
       if (args[0]) {
         const cmd = registry.get(args[0]);
@@ -1272,7 +1276,7 @@ EXAMPLE: ${cmd.example}
       }
 
       const cats = registry.getCategories();
-      let out = `CyberLinux 2.0 Command Center
+      let out = `${SYSTEM_INFO.osName} Command Center
 ===================================
 Total Supported Commands: ${registry.getAll().length}
 Available Categories:
@@ -1325,7 +1329,7 @@ EXPECTED OUTPUT
 IMPLEMENTATION
        ${cmd.isSimulation ? 'Educational Controlled Simulation' : 'Direct Virtual Environment Engine'}
 
-CyberLinux 2.0 LTS                  November 2026                 ${cmd.name.toUpperCase()}(1)
+${SYSTEM_INFO.osName} 1.0                         November 2026                 ${cmd.name.toUpperCase()}(1)
 `;
       return { exitCode: 0, stdout: out };
     }
@@ -1394,17 +1398,17 @@ CyberLinux 2.0 LTS                  November 2026                 ${cmd.name.toU
     options: ['-l (list privileges)', '-u <user> (run as user)', '-i (interactive root shell)'],
     practicalUse: 'Run administrative operations, and check misconfigured sudo rights via "sudo -l" for privilege escalation.',
     example: 'sudo -l',
-    expectedOutput: 'User student may run the following commands on cyberlinux:\n    (ALL) NOPASSWD: ALL',
+    expectedOutput: `User ${SYSTEM_INFO.username} may run the following commands on ${SYSTEM_INFO.hostname}:\n    (ALL : ALL) NOPASSWD: ALL`,
     execute: (args, ctx) => {
       if (!users.canSudo(ctx.user.name)) {
         return { exitCode: 1, stderr: `sudo: ${ctx.user.name} is not allowed to run sudo on ${network.hostname}\n` };
       }
 
       if (args.includes('-l')) {
-        const out = `Matching Defaults entries for student on cyberlinux:
+        const out = `Matching Defaults entries for ${ctx.user.name} on ${network.hostname}:
     env_reset, mail_badpass, secure_path=/usr/local/sbin\\:/usr/local/bin\\:/usr/sbin\\:/usr/bin\\:/sbin\\:/bin
 
-User student may run the following commands on cyberlinux:
+User ${ctx.user.name} may run the following commands on ${network.hostname}:
     (ALL : ALL) NOPASSWD: ALL
 `;
         return { exitCode: 0, stdout: out };
@@ -1448,7 +1452,7 @@ User student may run the following commands on cyberlinux:
       const ok = users.setCurrentUser(targetName);
       if (!ok) return { exitCode: 1, stderr: `su: user ${targetName} does not exist\n` };
       ctx.user = users.getUser(targetName);
-      ctx.cwd = ctx.user.home || '/home/student';
+      ctx.cwd = ctx.user.home || SYSTEM_INFO.home;
       return { exitCode: 0, stdout: `Switched to user ${targetName}\n`, newCwd: ctx.cwd };
     }
   });
@@ -1462,7 +1466,7 @@ User student may run the following commands on cyberlinux:
     options: [],
     practicalUse: 'Query user accounts and groups even when networked directory services (LDAP/AD) are connected.',
     example: 'getent passwd student',
-    expectedOutput: 'student:x:1000:1000:Cybersecurity Student:/home/student:/bin/bash',
+    expectedOutput: 'student:x:1001:1001:Cybersecurity Student:/home/student:/bin/bash',
     execute: (args) => {
       const db = args[0];
       if (db === 'passwd') {
@@ -1526,12 +1530,12 @@ User student may run the following commands on cyberlinux:
       const out = `top - ${new Date().toTimeString().substring(0, 8)} up 12 days, 2 users, load average: 0.12, 0.08, 0.05
 Tasks: 10 total,   1 running,   9 sleeping,   0 stopped,   0 zombie
 %Cpu(s):  ${stats.cpuUsage} us,  1.2 sy,  0.0 ni, ${(100 - stats.cpuUsage).toFixed(1)} id,  0.1 wa
-MiB Mem :   4096.0 total,   ${(4096 - stats.usedMemMB).toFixed(1)} free,    ${stats.usedMemMB} used,    512.0 buff/cache
+MiB Mem :   ${stats.totalMemMB}.0 total,   ${(stats.totalMemMB - stats.usedMemMB).toFixed(1)} free,    ${stats.usedMemMB} used,    512.0 buff/cache
 MiB Swap:   2048.0 total,   2048.0 free,        0.0 used.   3200.0 avail Mem
 
   PID USER      PR  NI    VIRT    RES    SHR S  %CPU  %MEM     TIME+ COMMAND
- 1520 student   20   0   14210   3840   2100 S   0.2   0.7   0:00.12 bash
- 1450 student   20   0  184200  42100  18400 S   0.2   2.1   0:05.40 gnome-shell
+ 1520 ${SYSTEM_INFO.username.padEnd(8)} 20   0   14210   3840   2100 S   0.2   0.7   0:00.12 bash
+ 1450 ${SYSTEM_INFO.username.padEnd(8)} 20   0  184200  42100  18400 S   0.2   2.1   0:05.40 gnome-shell
   680 root      20   0   32410   8400   4100 S   0.1   0.9   0:01.02 NetworkManager
  1240 root      20   0   15200   4100   2800 S   0.0   0.5   0:00.45 sshd
     1 root      20   0  168240  12840   8200 S   0.0   0.8   0:02.10 systemd
@@ -1553,7 +1557,7 @@ MiB Swap:   2048.0 total,   2048.0 free,        0.0 used.   3200.0 avail Mem
       // Launch or point user to System Monitor app
       return {
         exitCode: 0,
-        stdout: 'Opening CyberLinux System Monitor GUI...\n[Tip: Use System Monitor from the dock or app launcher for full interactive process termination and resource charts]\n'
+        stdout: 'Opening Panda OS System Monitor GUI...\n[Tip: Use System Monitor from the dock or app launcher for interactive process management and resource charts]\n'
       };
     }
   });
@@ -1587,9 +1591,13 @@ MiB Swap:   2048.0 total,   2048.0 free,        0.0 used.   3200.0 avail Mem
     options: ['-h (human readable)', '-m (display in megabytes)', '-g (display in gigabytes)'],
     practicalUse: 'Check memory exhaustion or swap activation.',
     example: 'free -h',
-    expectedOutput: '               total        used        free      shared  buff/cache   available\nMem:           4.0Gi       1.1Gi       2.4Gi        24Mi       512Mi       2.8Gi',
+    expectedOutput: '               total        used        free      shared  buff/cache   available\nMem:          16.0Gi       4.6Gi      11.4Gi        24Mi       512Mi      11.9Gi',
     execute: () => {
-      const out = '               total        used        free      shared  buff/cache   available\nMem:           4.0Gi       1.1Gi       2.4Gi        24Mi       512Mi       2.8Gi\nSwap:          2.0Gi          0B       2.0Gi\n';
+      const stats = processes.getOverallStats();
+      const totalGiB = stats.totalMemMB / 1024;
+      const usedGiB = stats.usedMemMB / 1024;
+      const freeGiB = totalGiB - usedGiB;
+      const out = `               total        used        free      shared  buff/cache   available\nMem:          ${totalGiB.toFixed(1)}Gi       ${usedGiB.toFixed(1)}Gi      ${freeGiB.toFixed(1)}Gi        24Mi       512Mi      ${(freeGiB + 0.5).toFixed(1)}Gi\nSwap:          2.0Gi          0B       2.0Gi\n`;
       return { exitCode: 0, stdout: out };
     }
   });
@@ -1603,16 +1611,16 @@ MiB Swap:   2048.0 total,   2048.0 free,        0.0 used.   3200.0 avail Mem
     options: [],
     practicalUse: 'Enumerate CPU architecture, virtualization flags (VT-x/AMD-V), and hardware vulnerability mitigations (Spectre/Meltdown).',
     example: 'lscpu',
-    expectedOutput: 'Architecture:            x86_64\nCPU op-mode(s):        32-bit, 64-bit\nModel name:            Intel(R) Core(TM) i7-11800H @ 2.30GHz\nCPU(s):                8',
+    expectedOutput: `Architecture:            x86_64\nCPU op-mode(s):        32-bit, 64-bit\nCPU(s):                ${SYSTEM_INFO.cpuCount}`,
     execute: () => {
       const out = `Architecture:            x86_64
   CPU op-mode(s):        32-bit, 64-bit
   Address sizes:         39 bits physical, 48 bits virtual
   Byte Order:            Little Endian
-CPU(s):                  8
-  On-line CPU(s) list:   0-7
+CPU(s):                  ${SYSTEM_INFO.cpuCount}
+  On-line CPU(s) list:   0-${SYSTEM_INFO.cpuCount - 1}
 Vendor ID:               GenuineIntel
-  Model name:            Intel(R) Core(TM) i7-11800H @ 2.30GHz
+  Model name:            Virtual Panda OS CPU
 Virtualization features: 
   Hypervisor vendor:     KVM
   Virtualization type:   full
@@ -1984,7 +1992,7 @@ All packages are up to date.
     options: [],
     practicalUse: 'Inspect environment variables to spot hardcoded passwords, AWS tokens, or custom scripts in $PATH.',
     example: 'env',
-    expectedOutput: 'USER=student\nHOME=/home/student\nPATH=/usr/local/bin:/usr/bin:/bin\nSHELL=/bin/bash',
+    expectedOutput: `USER=${SYSTEM_INFO.username}\nHOME=${SYSTEM_INFO.home}\nPATH=/usr/local/bin:/usr/bin:/bin\nSHELL=/bin/bash`,
     execute: (args, ctx) => {
       const lines = Object.entries(ctx.env).map(([k, v]) => `${k}=${v}`);
       return { exitCode: 0, stdout: lines.join('\n') + '\n' };
@@ -2141,7 +2149,7 @@ To                         Action      From
       const out = `[+] Initializing audit
 ------------------------------------
   - Program version:               3.0.8
-  - Operating system:              CyberLinux 2.0 LTS
+      - Operating system:              ${SYSTEM_INFO.osName}
   - Kernel version:                6.8.0-cyber-generic
 
 [+] System Tools
@@ -2404,7 +2412,7 @@ Session completed.
     expectedOutput: 'File Name                       : mascot.svg\nFile Size                       : 4.2 kB\nFile Type                       : SVG\nMIME Type                       : image/svg+xml\nCreator                         : CyberLinux Art Team',
     isSimulation: true,
     execute: (args, ctx) => {
-      const file = PathValidator.normalize(args[0] || '/home/student/Pictures/mascot.svg', ctx.cwd);
+      const file = PathValidator.normalize(args[0] || `${ctx.user.home}/Pictures/mascot.svg`, ctx.cwd, ctx.user.home);
       const result = vfs.readFile(file, ctx.cwd, ctx.user);
       if (!result.success) return { exitCode: 1, stderr: `exiftool: ${file}: ${result.error}\n` };
 
@@ -2475,23 +2483,25 @@ MIME Type                       : ${mimeType}
     example: 'linpeas',
     expectedOutput: '════════════════════════════════════╣ Check SUID Files ╠════════════════════════════════════\n-rwsr-xr-x 1 root root /usr/bin/find ---> Possible SUID Escalation via find -exec!',
     isSimulation: true,
-    execute: () => {
+    execute: (args, ctx) => {
+      const sudoSummary = users.canSudo(ctx.user.name)
+        ? `[!] User ${ctx.user.name} has NOPASSWD sudo access:\n    ${ctx.user.name} ALL=(ALL) NOPASSWD: ALL`
+        : `[!] User ${ctx.user.name} is not allowed to run sudo`;
       const out = `
-                            Linux Privilege Escalation Awesome Script (CyberLinux Edition)
+                            Linux Privilege Escalation Awesome Script (${SYSTEM_INFO.osName} Edition)
                
 ╔════════════════════════════════════════════════════════════════════════════════════════════════╗
 ║                                        SYSTEM INFORMATION                                      ║
 ╚════════════════════════════════════════════════════════════════════════════════════════════════╝
 [+] Linux Kernel: 6.8.0-cyber-generic (x86_64)
-[+] Distribution: CyberLinux 2.0 LTS (Panda Edition)
-[+] Hostname: cyberlinux
-[+] Current User: student (uid=1000)
+[+] Distribution: ${SYSTEM_INFO.osName}
+[+] Hostname: ${network.hostname}
+[+] Current User: ${ctx.user.name} (uid=${ctx.user.uid})
 
 ╔════════════════════════════════════════════════════════════════════════════════════════════════╗
 ║                                        SUDO PRIVILEGES                                         ║
 ╚════════════════════════════════════════════════════════════════════════════════════════════════╝
-[!] User student has NOPASSWD sudo access:
-    student ALL=(ALL) NOPASSWD: ALL
+${sudoSummary}
 
 ╔════════════════════════════════════════════════════════════════════════════════════════════════╗
 ║                                 INTERESTING SUID BINARIES                                      ║

@@ -1,6 +1,7 @@
 import { CommandParser } from './command-parser.js';
 import { SecurityLimits } from '../security/limits.js';
 import { PathValidator } from '../security/path-validator.js';
+import { SYSTEM_INFO } from '../core/system-info.js';
 
 /**
  * ShellInterpreter
@@ -15,15 +16,16 @@ export class ShellInterpreter {
     this.processes = processes;
     this.network = network;
 
-    this.cwd = '/home/student';
+    const user = this.users.getCurrentUser();
+    this.cwd = user.home || SYSTEM_INFO.home;
     this.env = {
-      USER: 'student',
-      HOME: '/home/student',
+      USER: user.name,
+      HOME: user.home || SYSTEM_INFO.home,
       SHELL: '/bin/bash',
       PATH: '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin',
-      PWD: '/home/student',
+      PWD: user.home || SYSTEM_INFO.home,
       TERM: 'xterm-256color',
-      HOSTNAME: 'cyberlinux',
+      HOSTNAME: this.network.hostname,
       '?': 0
     };
   }
@@ -31,7 +33,7 @@ export class ShellInterpreter {
   getPrompt() {
     const username = this.users.getCurrentUsername();
     const isRoot = this.users.isRoot();
-    const home = this.users.getCurrentUser().home || '/home/student';
+    const home = this.users.getCurrentUser().home || SYSTEM_INFO.home;
     let displayDir = this.cwd;
     if (displayDir === home) {
       displayDir = '~';
@@ -109,6 +111,7 @@ export class ShellInterpreter {
           const activeUser = this.users.getCurrentUser();
           this.env.USER = activeUser.name;
           this.env.HOME = activeUser.home;
+          this.env.HOSTNAME = this.network.hostname;
           if (result.clearScreen) {
             shouldClear = true;
           }
@@ -185,7 +188,7 @@ export class ShellInterpreter {
 
       if (lastWord.includes('/')) {
         const split = PathValidator.split(lastWord);
-        searchDir = PathValidator.normalize(split.dirname, this.cwd);
+        searchDir = PathValidator.normalize(split.dirname, this.cwd, this.users.getCurrentUser().home);
         filePrefix = split.basename;
       }
 

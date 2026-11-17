@@ -40,6 +40,7 @@ Students can explore the filesystem, run Linux commands, inspect command outputs
 - Grid View and List View with file sizes and POSIX permissions (`-rwxr-xr-x`).
 - Context menu: Open, Edit in Text Editor, Rename, Delete, and Permissions/Properties inspector (change octal modes like `755`, `644`, `4755`).
 - File search and instant filtering.
+- Pictures includes two JPEG photos and vector samples; images open in the Image Viewer.
 
 ### 📖 Searchable Command Reference Catalog
 - Searchable in-app documentation of all commands in the syllabus.
@@ -51,7 +52,7 @@ Students can explore the filesystem, run Linux commands, inspect command outputs
 - **Text Editor (Gedit style)**: Create, open, edit virtual files, line numbers, word/char count, unsaved indicator, and `Ctrl+S` saving.
 - **Calculator**: Clean calculator powered by a safe recursive-descent parser (`SafeMath` without `eval()`).
 - **System Monitor**: Live simulated CPU %, RAM MB, and Virtual Disk gauges with an interactive process table to terminate processes.
-- **Image Viewer**: Safe SVG and graphic viewer with Zoom In/Out, 90° rotation, and metadata inspector.
+- **Image Viewer**: Safe SVG and bundled JPEG viewer with Zoom In/Out, 90° rotation, and metadata inspector.
 - **Settings**: Theme selection (Light / Dark mode), wallpaper picker, user profile details, JSON backup export/import, and factory reset.
 - **About CyberLinux**: Architecture and security summary.
 
@@ -83,6 +84,7 @@ CyberLinux/
 │
 ├── assets/
 │   ├── mascot/                  # Cute Cyber Panda mascot SVG
+│   ├── pictures/                # Bundled JPEG photos shown in the virtual Pictures folder
 │   └── wallpapers/              # Wallpaper graphics and preview styles
 │
 ├── css/
@@ -224,9 +226,11 @@ npx serve .
 | Shortcut | Action |
 | :--- | :--- |
 | `Ctrl + Alt + T` | Open new Terminal window |
+| `Ctrl + Q` | Close the active emulator window |
 | `Super` (Windows key) | Toggle Application Overview (Launcher) |
 | `Ctrl + Shift + Esc` | Open System Monitor |
 | `Ctrl + L` | Clear terminal screen |
+| `Ctrl + W` | Delete the previous word in the terminal input |
 | `Ctrl + C` | Cancel current command / interrupt prompt |
 | `Ctrl + S` | Save file in Text Editor |
 | `Tab` | Autocomplete command names and filesystem paths |

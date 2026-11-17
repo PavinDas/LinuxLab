@@ -1,4 +1,6 @@
 import { Sanitizer } from '../security/sanitizer.js';
+import { SecurityLimits } from '../security/limits.js';
+import { filterTextInput } from '../security/input-validation.js';
 import { CommandHistory } from '../terminal/command-history.js';
 import { sysEvents } from '../core/event-bus.js';
 
@@ -76,7 +78,7 @@ export class TerminalApp {
     this.screen = Sanitizer.createElement('div', { className: 'terminal-screen' });
 
     // Initial Welcome Banner
-    const banner = `CyberLinux 2.0 LTS (Panda Edition) - Interactive Cybersecurity Shell
+    const banner = `Panda OS - Interactive Shell
 Type 'help' for command categories, or 'man <command>' for manual pages.
 Try: 'ls -lah', 'id', 'nmap -sV 192.168.1.10', or 'linpeas'
 ----------------------------------------------------------------------
@@ -91,10 +93,14 @@ Try: 'ls -lah', 'id', 'nmap -sV 192.168.1.10', or 'linpeas'
     this.input = Sanitizer.createElement('input', {
       type: 'text',
       className: 'terminal-input',
+      maxlength: SecurityLimits.MAX_INPUT_LENGTH,
       autocomplete: 'off',
       autocorrect: 'off',
       autocapitalize: 'off',
-      spellcheck: 'false'
+      spellcheck: 'false',
+      onInput: (e) => {
+        e.target.value = filterTextInput(e.target.value).slice(0, SecurityLimits.MAX_INPUT_LENGTH);
+      }
     });
 
     this.inputLine.appendChild(this.promptSpan);
@@ -185,6 +191,19 @@ Try: 'ls -lah', 'id', 'nmap -sV 192.168.1.10', or 'linpeas'
           this.appendOutput(completions.join('  '), 'term-suggestions');
           this.updatePrompt();
         }
+      } else if (e.ctrlKey && !e.altKey && e.key.toLowerCase() === 'w') {
+        e.preventDefault();
+        const value = this.input.value;
+        const start = this.input.selectionStart ?? value.length;
+        const end = this.input.selectionEnd ?? start;
+        let deleteFrom = start;
+
+        if (start === end) {
+          while (deleteFrom > 0 && /\s/.test(value[deleteFrom - 1])) deleteFrom--;
+          while (deleteFrom > 0 && !/\s/.test(value[deleteFrom - 1])) deleteFrom--;
+        }
+
+        this.input.setRangeText('', deleteFrom, end, 'start');
       } else if (e.ctrlKey && e.key.toLowerCase() === 'l') {
         e.preventDefault();
         this.clearScreen();

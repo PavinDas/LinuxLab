@@ -29,9 +29,9 @@
   /* Force open windows to adapt to mobile bounds */
   .desktop-window {
     width: 100% !important;
-    height: calc(100% - 32px) !important;
+    height: 100% !important;
     left: 0 !important;
-    top: 32px !important;
+    top: 0 !important;
     border-radius: 0 !important;
     border: none !important;
   }

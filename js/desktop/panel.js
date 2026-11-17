@@ -25,7 +25,7 @@ export class TopPanel {
       onClick: () => sysEvents.emit('launcher:toggle')
     }, 'Activities');
 
-    this.activeAppTitle = Sanitizer.createElement('span', { className: 'panel-active-app' }, 'CyberLinux Desktop');
+    this.activeAppTitle = Sanitizer.createElement('span', { className: 'panel-active-app' }, 'Panda OS Desktop');
 
     leftSec.appendChild(activitiesBtn);
     leftSec.appendChild(this.activeAppTitle);
@@ -48,6 +48,13 @@ export class TopPanel {
       onClick: () => sysEvents.emit('theme:toggle')
     }, '🌓');
 
+    this.fullscreenBtn = Sanitizer.createElement('button', {
+      className: 'panel-btn panel-pill-btn fullscreen-btn',
+      title: 'Enter Full Screen Desktop',
+      'aria-label': 'Enter Full Screen Desktop',
+      onClick: () => this.toggleFullscreen()
+    }, '⛶');
+
     // Network / Audio / Battery Pill
     const statusPill = Sanitizer.createElement('div', {
       className: 'panel-pill-btn',
@@ -61,11 +68,12 @@ export class TopPanel {
     // User profile pill
     const userBtn = Sanitizer.createElement('button', {
       className: 'panel-btn user-btn',
-      title: 'Student User Profile',
+      title: 'Kiddy User Profile',
       onClick: () => this.launchCallback('settings')
-    }, '👤 student');
+    }, '👤 kiddy');
 
     rightSec.appendChild(themeBtn);
+    rightSec.appendChild(this.fullscreenBtn);
     rightSec.appendChild(statusPill);
     rightSec.appendChild(userBtn);
 
@@ -129,13 +137,20 @@ export class TopPanel {
 
   setupListeners() {
     sysEvents.on('window:focused', ({ title }) => {
-      this.activeAppTitle.textContent = title || 'CyberLinux Desktop';
+      this.activeAppTitle.textContent = title || 'Panda OS Desktop';
     });
 
     sysEvents.on('window:closed', () => {
       if (this.wm.windows.size === 0) {
-        this.activeAppTitle.textContent = 'CyberLinux Desktop';
+        this.activeAppTitle.textContent = 'Panda OS Desktop';
       }
+    });
+
+    document.addEventListener('fullscreenchange', () => {
+      const isFullscreen = Boolean(document.fullscreenElement);
+      this.fullscreenBtn.textContent = isFullscreen ? '×' : '⛶';
+      this.fullscreenBtn.title = isFullscreen ? 'Exit Full Screen Desktop' : 'Enter Full Screen Desktop';
+      this.fullscreenBtn.setAttribute('aria-label', this.fullscreenBtn.title);
     });
 
     document.addEventListener('click', (e) => {
@@ -144,5 +159,24 @@ export class TopPanel {
         this.calendarPopup.classList.add('hidden');
       }
     });
+  }
+
+  async toggleFullscreen() {
+    try {
+      if (document.fullscreenElement) {
+        await document.exitFullscreen();
+      } else if (document.documentElement.requestFullscreen) {
+        await document.documentElement.requestFullscreen();
+      } else {
+        throw new Error('Fullscreen mode is not supported by this browser.');
+      }
+    } catch (error) {
+      console.error('Could not change desktop fullscreen mode:', error);
+      sysEvents.emit('notify', {
+        title: 'Fullscreen unavailable',
+        message: error.message || 'The browser could not enter fullscreen mode.',
+        type: 'error'
+      });
+    }
   }
 }

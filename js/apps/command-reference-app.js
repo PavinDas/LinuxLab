@@ -1,4 +1,5 @@
 import { Sanitizer } from '../security/sanitizer.js';
+import { filterTextInput } from '../security/input-validation.js';
 import { sysEvents } from '../core/event-bus.js';
 
 /**
@@ -24,7 +25,9 @@ export class CommandReferenceApp {
       type: 'text',
       className: 'cmdref-search',
       placeholder: 'Search 150+ Linux & Cybersecurity commands...',
+      maxlength: 256,
       onInput: (e) => {
+        e.target.value = filterTextInput(e.target.value).slice(0, 256);
         this.searchQuery = e.target.value;
         this.renderList();
       }

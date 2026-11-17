@@ -57,6 +57,23 @@ body.dark-theme .wp-pastel {
   background: linear-gradient(145deg, #1e293b, #0f172a);
 }
 
+/* Additional supplied wallpapers */
+.wp-astronaut {
+  background: url("../assets/wallpapers/astronaut-jellyfish.png") center / cover no-repeat;
+}
+
+.wp-neon-city {
+  background: url("../assets/wallpapers/neon-city.jpg") center / cover no-repeat;
+}
+
+.wp-samurai {
+  background: url("../assets/wallpapers/samurai-sunset.jpg") center / cover no-repeat;
+}
+
+.wp-river {
+  background: url("../assets/wallpapers/minimalist-river.jpg") center / cover no-repeat;
+}
+
 /* Desktop Icons Grid */
 .desktop-icons-container {
   position: absolute;

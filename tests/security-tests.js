@@ -3,9 +3,11 @@ import { Sanitizer } from '../js/security/sanitizer.js';
 import { PathValidator } from '../js/security/path-validator.js';
 import { SafeMath } from '../js/security/safe-math.js';
 import { SecurityLimits } from '../js/security/limits.js';
+import { filterTextInput, validateFilenameInput, validateOctalModeInput, validateVirtualPathInput } from '../js/security/input-validation.js';
 import { CommandParser } from '../js/terminal/command-parser.js';
+import { ImageViewerApp } from '../js/apps/image-viewer-app.js';
 
-describe('CyberLinux Security Architecture Tests', () => {
+describe('Panda OS Security Architecture Tests', () => {
 
   it('strictly escapes XSS payloads and HTML injection', () => {
     const raw = `<script>alert("xss")</script><img src=x onerror=alert(1)>`;
@@ -35,8 +37,43 @@ describe('CyberLinux Security Architecture Tests', () => {
     expect(PathValidator.isValidFilename('valid_script.sh')).toBe(true);
     expect(PathValidator.isValidFilename('../hacked')).toBe(false);
     expect(PathValidator.isValidFilename('test/file')).toBe(false);
+    expect(PathValidator.isValidFilename('line\nbreak')).toBe(false);
+    expect(PathValidator.isValidFilename('hidden\u202eexe')).toBe(false);
     expect(PathValidator.isValidFilename('')).toBe(false);
     expect(PathValidator.isValidFilename('.')).toBe(false);
+  });
+
+  it('filters control characters and validates modal filename, path, and permission inputs', () => {
+    expect(filterTextInput('safe\nname\u202e')).toBe('safename');
+    expect(validateFilenameInput('report.txt')).toBe(null);
+    expect(validateFilenameInput('../report.txt')).toBeTruthy();
+    expect(validateVirtualPathInput('/home/kiddy/notes.txt')).toBe(null);
+    expect(validateVirtualPathInput('/home/kiddy/../etc/shadow')).toBeTruthy();
+    expect(validateVirtualPathInput('notes.txt')).toBeTruthy();
+    expect(validateOctalModeInput('4755')).toBe(null);
+    expect(validateOctalModeInput('999')).toBeTruthy();
+  });
+
+  it('keeps untrusted SVG markup out of the active document tree', async () => {
+    const app = new ImageViewerApp({
+      readFile: () => ({
+        success: true,
+        content: '<svg xmlns="http://www.w3.org/2000/svg"><script>window.pandaSvgPayload = true</script></svg>',
+        node: { name: 'untrusted.svg', assetId: null }
+      })
+    }, {
+      getCurrentUser: () => ({ home: '/home/kiddy' })
+    });
+
+    const viewer = app.createUI('/home/kiddy/Pictures/untrusted.svg');
+    expect(viewer.querySelector('svg')).toBeFalsy();
+    expect(viewer.querySelector('script')).toBeFalsy();
+    const image = viewer.querySelector('img');
+    expect(image.getAttribute('src').startsWith('blob:')).toBe(true);
+    document.body.appendChild(viewer);
+    await image.decode();
+    expect(image.naturalWidth).toBeGreaterThan(0);
+    viewer.remove();
   });
 
   it('protects against prototype pollution in JSON deserialization', () => {

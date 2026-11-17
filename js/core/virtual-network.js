@@ -1,3 +1,5 @@
+import { SYSTEM_INFO } from './system-info.js';
+
 /**
  * VirtualNetwork
  * Simulates network interfaces, routing, ARP, DNS resolution, and controlled
@@ -6,7 +8,7 @@
  */
 export class VirtualNetwork {
   constructor() {
-    this.hostname = 'cyberlinux';
+    this.hostname = SYSTEM_INFO.hostname;
     this.domain = 'cyberlinux.local';
 
     this.interfaces = [
@@ -108,8 +110,8 @@ export class VirtualNetwork {
         ]
       },
       '127.0.0.1': {
-        name: 'Localhost (CyberLinux)',
-        os: 'CyberLinux 2.0 LTS (Linux 6.8.0)',
+        name: `Localhost (${SYSTEM_INFO.osName})`,
+        os: `${SYSTEM_INFO.osName} (Linux 6.8.0)`,
         ports: [
           { port: 22, proto: 'tcp', service: 'ssh', product: 'OpenSSH', version: '8.9p1 Ubuntu', state: 'open' },
           { port: 80, proto: 'tcp', service: 'http', product: 'nginx', version: '1.18.0', state: 'open' }

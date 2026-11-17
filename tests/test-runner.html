@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>CyberLinux Automated Test Suite</title>
+  <title>Panda OS Automated Test Suite</title>
   <style>
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, monospace;
@@ -50,7 +50,7 @@
   </style>
 </head>
 <body>
-  <h1>🐼 CyberLinux Quality Assurance & Security Test Suite</h1>
+  <h1>🐼 Panda OS Quality Assurance & Security Test Suite</h1>
   <div id="summary" class="summary-card">Running tests...</div>
   <div id="results"></div>
 
@@ -60,6 +60,7 @@
     import './terminal-tests.js';
     import './security-tests.js';
     import './application-tests.js';
+    import './dialog-tests.js';
 
     const resultsEl = document.getElementById('results');
     const summaryEl = document.getElementById('summary');

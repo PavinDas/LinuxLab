@@ -3,45 +3,52 @@
  * sticker-like app icons. Keeps the existing desktop structure and behavior.
  */
 :root {
-  --bg-primary: #fff7f2;
-  --bg-surface: #fffefd;
-  --bg-surface-translucent: rgba(255, 252, 249, 0.97);
-  --bg-panel: rgba(255, 246, 240, 0.96);
-  --bg-dock: rgba(255, 252, 249, 0.97);
-  --border-color: rgba(141, 111, 160, 0.5);
-  --text-primary: #40334c;
-  --text-secondary: #5f516c;
-  --text-muted: #786b84;
-  --accent-green: #75c9ae;
-  --accent-pastel-green: #b6e8d4;
-  --accent-lavender: #ad86d1;
-  --accent-orange: #e89a5c;
-  --accent-cyan: #5e9bb1;
-  --accent-danger: #d97188;
+  --palette-coral: #ff6f91;
+  --palette-mint: #37c99c;
+  --palette-lavender: #8768f7;
+  --palette-peach: #ffbf69;
+  --palette-cyan: #2fb8d7;
+  --palette-ink: #34234a;
+  --palette-plum: #211832;
+  --bg-primary: #fff7f1;
+  --bg-surface: #fffdfb;
+  --bg-surface-translucent: rgba(255, 253, 251, 0.97);
+  --bg-panel: rgba(255, 249, 252, 0.94);
+  --bg-dock: rgba(255, 253, 251, 0.97);
+  --border-color: rgba(135, 104, 247, 0.34);
+  --text-primary: var(--palette-ink);
+  --text-secondary: #65517d;
+  --text-muted: #766687;
+  --accent-green: #187d68;
+  --accent-pastel-green: #c5f2df;
+  --accent-lavender: #7251d5;
+  --accent-orange: #a95716;
+  --accent-cyan: #137e98;
+  --accent-danger: #d84665;
   --win-radius: 22px;
-  --win-shadow: 0 20px 55px rgba(104, 75, 120, 0.18), 0 5px 16px rgba(104, 75, 120, 0.1);
-  --win-titlebar-bg: #fff1f7;
+  --win-shadow: 0 20px 55px rgba(74, 44, 104, 0.2), 0 5px 16px rgba(74, 44, 104, 0.1);
+  --win-titlebar-bg: #ffe5ee;
   --font-sans: "Trebuchet MS", ui-rounded, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
 body.dark-theme {
-  --bg-primary: #342d49;
-  --bg-surface: #443a5a;
-  --bg-surface-translucent: rgba(68, 58, 90, 0.97);
-  --bg-panel: rgba(57, 48, 75, 0.96);
-  --bg-dock: rgba(68, 58, 90, 0.97);
-  --border-color: rgba(222, 198, 242, 0.48);
-  --text-primary: #fff9ff;
-  --text-secondary: #eee2f4;
-  --text-muted: #d4c5df;
-  --accent-green: #a3ead2;
-  --accent-pastel-green: #5a8879;
-  --accent-lavender: #d3b3f0;
-  --accent-orange: #ffd1a8;
-  --accent-cyan: #bce6f1;
-  --accent-danger: #ffb0c1;
-  --win-titlebar-bg: #514567;
-  --win-shadow: 0 22px 60px rgba(20, 14, 33, 0.4), 0 6px 18px rgba(20, 14, 33, 0.25);
+  --bg-primary: #211832;
+  --bg-surface: #33254c;
+  --bg-surface-translucent: rgba(51, 37, 76, 0.97);
+  --bg-panel: rgba(33, 24, 50, 0.96);
+  --bg-dock: rgba(51, 37, 76, 0.97);
+  --border-color: rgba(182, 163, 255, 0.42);
+  --text-primary: #fff8f4;
+  --text-secondary: #e9dcf5;
+  --text-muted: #cbbdde;
+  --accent-green: #62d6b0;
+  --accent-pastel-green: #225b4c;
+  --accent-lavender: #b6a3ff;
+  --accent-orange: #ffc875;
+  --accent-cyan: #69d7eb;
+  --accent-danger: #ff7d99;
+  --win-titlebar-bg: #3b2a56;
+  --win-shadow: 0 22px 60px rgba(17, 10, 28, 0.48), 0 6px 18px rgba(17, 10, 28, 0.28);
 }
 
 button,
@@ -55,30 +62,37 @@ button:focus-visible,
 input:focus-visible,
 textarea:focus-visible,
 select:focus-visible {
-  outline: 3px solid rgba(197, 166, 232, 0.75);
+  outline: 3px solid rgba(135, 104, 247, 0.78);
   outline-offset: 2px;
 }
 
+body.dark-theme button:focus-visible,
+body.dark-theme input:focus-visible,
+body.dark-theme textarea:focus-visible,
+body.dark-theme select:focus-visible {
+  outline-color: rgba(182, 163, 255, 0.92);
+}
+
 ::selection {
-  color: #51445d;
-  background: #f4cce1;
+  color: var(--palette-ink);
+  background: #ffc3d3;
 }
 
 .wp-mascot {
   background:
-    radial-gradient(ellipse at 82% 72%, rgba(255, 195, 216, 0.76), transparent 34%),
-    radial-gradient(ellipse at 23% 24%, rgba(207, 190, 250, 0.7), transparent 34%),
-    radial-gradient(ellipse at 72% 15%, rgba(197, 240, 222, 0.76), transparent 28%),
-    linear-gradient(135deg, #fff0f5 0%, #f8f2ff 52%, #e8f8f0 100%);
+    radial-gradient(ellipse at 82% 72%, rgba(255, 111, 145, 0.32), transparent 36%),
+    radial-gradient(ellipse at 23% 24%, rgba(135, 104, 247, 0.25), transparent 36%),
+    radial-gradient(ellipse at 72% 15%, rgba(55, 201, 156, 0.28), transparent 30%),
+    linear-gradient(135deg, #fff0f5 0%, #f6f0ff 52%, #e9fbf5 100%);
   background-size: cover;
 }
 
 body.dark-theme .wp-mascot {
   background:
-    radial-gradient(ellipse at 82% 72%, rgba(185, 113, 157, 0.28), transparent 36%),
-    radial-gradient(ellipse at 23% 24%, rgba(139, 113, 187, 0.35), transparent 34%),
-    radial-gradient(ellipse at 72% 15%, rgba(107, 177, 154, 0.25), transparent 28%),
-    linear-gradient(135deg, #28243e 0%, #302941 52%, #203a3a 100%);
+    radial-gradient(ellipse at 82% 72%, rgba(255, 111, 145, 0.24), transparent 36%),
+    radial-gradient(ellipse at 23% 24%, rgba(135, 104, 247, 0.28), transparent 36%),
+    radial-gradient(ellipse at 72% 15%, rgba(55, 201, 156, 0.2), transparent 30%),
+    linear-gradient(135deg, #211832 0%, #332044 52%, #193a39 100%);
 }
 
 .wp-mascot::after {
@@ -98,39 +112,39 @@ body.dark-theme .wp-mascot::after {
 }
 
 .wp-cyber {
-  background-color: #f7effb;
+  background-color: #f8f2ff;
   background-image:
-    linear-gradient(rgba(185, 151, 218, 0.15) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(185, 151, 218, 0.15) 1px, transparent 1px);
+    linear-gradient(rgba(135, 104, 247, 0.16) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(135, 104, 247, 0.16) 1px, transparent 1px);
   background-size: 36px 36px;
 }
 
 body.dark-theme .wp-cyber {
-  background-color: #27233b;
+  background-color: #211832;
   background-image:
-    linear-gradient(rgba(197, 166, 232, 0.1) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(197, 166, 232, 0.1) 1px, transparent 1px);
+    linear-gradient(rgba(182, 163, 255, 0.13) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(182, 163, 255, 0.13) 1px, transparent 1px);
 }
 
 .wp-pastel {
-  background: linear-gradient(135deg, #ffe2cc 0%, #f8d9eb 52%, #dcd4ff 100%);
+  background: linear-gradient(135deg, #ffe0c2 0%, #ffc5d4 52%, #dcd4ff 100%);
 }
 
 body.dark-theme .wp-pastel {
-  background: linear-gradient(135deg, #50374a 0%, #493850 52%, #343450 100%);
+  background: linear-gradient(135deg, #563145 0%, #4a2d58 52%, #33254c 100%);
 }
 
 .wp-slate {
-  background: linear-gradient(145deg, #e8e4f2, #dcece8);
+  background: linear-gradient(145deg, #e9e3ff, #d7f5eb);
 }
 
 body.dark-theme .wp-slate {
-  background: linear-gradient(145deg, #39344e, #293d42);
+  background: linear-gradient(145deg, #393052, #20443f);
 }
 
 .top-panel {
-  border-bottom-color: rgba(197, 166, 232, 0.25);
-  box-shadow: 0 4px 18px rgba(91, 67, 111, 0.08);
+  border-bottom-color: rgba(135, 104, 247, 0.24);
+  box-shadow: 0 4px 18px rgba(74, 44, 104, 0.09);
 }
 
 .panel-btn,
@@ -142,17 +156,17 @@ body.dark-theme .wp-slate {
 .panel-btn:hover,
 .panel-pill-btn:hover {
   border-color: var(--border-color);
-  background-color: rgba(197, 166, 232, 0.2);
+  background-color: rgba(135, 104, 247, 0.14);
 }
 
 .activities-btn {
-  background: #eadcf8;
-  color: #49365c;
+  background: linear-gradient(135deg, #ffc4d4, #d8ccff);
+  color: #302141;
 }
 
 body.dark-theme .activities-btn {
-  background: rgba(197, 166, 232, 0.2);
-  color: #ead8ff;
+  background: linear-gradient(135deg, #ff8eaa, #b6a3ff);
+  color: #241735;
 }
 
 .desktop-icon-item {
@@ -177,18 +191,18 @@ body.dark-theme .desktop-icon-item:hover {
   place-items: center;
   border: 1px solid rgba(255, 255, 255, 0.85);
   border-radius: 21px;
-  background: linear-gradient(145deg, #fffdfd, #f8e9f4);
-  box-shadow: 0 7px 15px rgba(83, 61, 101, 0.17), inset 0 1px 2px #ffffff;
+  background: linear-gradient(145deg, #fffdfd, #ffe2ed);
+  box-shadow: 0 7px 15px rgba(74, 44, 104, 0.17), inset 0 1px 2px #ffffff;
   font-size: 36px;
   filter: none;
   margin-bottom: 5px;
 }
 
-.desktop-icon-item:nth-child(2) .desktop-icon-symbol { background: linear-gradient(145deg, #fff5e5, #ffe1ce); }
-.desktop-icon-item:nth-child(3) .desktop-icon-symbol { background: linear-gradient(145deg, #f1e7ff, #ded1fa); }
-.desktop-icon-item:nth-child(4) .desktop-icon-symbol { background: linear-gradient(145deg, #e7f8f2, #cceee4); }
-.desktop-icon-item:nth-child(5) .desktop-icon-symbol { background: linear-gradient(145deg, #e8f5ff, #cfe7fa); }
-.desktop-icon-item:nth-child(6) .desktop-icon-symbol { background: linear-gradient(145deg, #fff0f4, #f7d8e6); }
+.desktop-icon-item:nth-child(2) .desktop-icon-symbol { background: linear-gradient(145deg, #ffe9ba, #ffc878); }
+.desktop-icon-item:nth-child(3) .desktop-icon-symbol { background: linear-gradient(145deg, #eee5ff, #c9b9ff); }
+.desktop-icon-item:nth-child(4) .desktop-icon-symbol { background: linear-gradient(145deg, #ccf4e3, #89e0bd); }
+.desktop-icon-item:nth-child(5) .desktop-icon-symbol { background: linear-gradient(145deg, #d8efff, #a9d8ff); }
+.desktop-icon-item:nth-child(6) .desktop-icon-symbol { background: linear-gradient(145deg, #ffdce7, #ffadc5); }
 
 .desktop-icon-label {
   font-size: 12px;
@@ -205,7 +219,7 @@ body.dark-theme .desktop-icon-label {
 }
 
 .desktop-window.active {
-  box-shadow: var(--win-shadow), 0 0 0 2px rgba(197, 166, 232, 0.5);
+  box-shadow: var(--win-shadow), 0 0 0 2px rgba(135, 104, 247, 0.48);
 }
 
 .window-titlebar {
@@ -227,18 +241,18 @@ body.dark-theme .desktop-icon-label {
 .win-btn,
 body.dark-theme .win-btn {
   border: 1px solid rgba(255, 255, 255, 0.54);
-  color: #493d55;
+  color: #39284e;
   background: #f6e5f0;
 }
 
-.win-btn-minimize:hover { background: #ffe2ad; color: #805c42; }
-.win-btn-maximize:hover { background: #ccefe2; color: #456b5e; }
-.win-btn-close:hover { background: #ffcbd5; color: #8a4759; }
+.win-btn-minimize:hover { background: #ffd58a; color: #68400f; }
+.win-btn-maximize:hover { background: #bcefdc; color: #155e4b; }
+.win-btn-close:hover { background: #ff9caf; color: #6b1830; }
 
 .dock-inner {
-  border: 1px solid rgba(197, 166, 232, 0.48);
+  border: 1px solid rgba(135, 104, 247, 0.42);
   background: var(--bg-dock);
-  box-shadow: 0 16px 38px rgba(81, 59, 101, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.82);
+  box-shadow: 0 16px 38px rgba(74, 44, 104, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.82);
 }
 
 .dock-item {
@@ -247,7 +261,7 @@ body.dark-theme .win-btn {
 
 .dock-item:hover {
   transform: translateY(-7px) scale(1.08);
-  background: rgba(197, 166, 232, 0.18);
+  background: rgba(135, 104, 247, 0.16);
 }
 
 .dock-icon {
@@ -257,24 +271,24 @@ body.dark-theme .win-btn {
   place-items: center;
   border: 1px solid rgba(255, 255, 255, 0.82);
   border-radius: 15px;
-  background: linear-gradient(145deg, #fffdfd, #f3e8f5);
-  box-shadow: 0 4px 10px rgba(83, 61, 101, 0.15), inset 0 1px 2px #ffffff;
+  background: linear-gradient(145deg, #fffdfd, #f3e9ff);
+  box-shadow: 0 4px 10px rgba(74, 44, 104, 0.15), inset 0 1px 2px #ffffff;
   font-size: 25px;
 }
 
-#dock [data-app-id="terminal"] .dock-icon { background: linear-gradient(145deg, #e6f8f0, #cceee3); }
-#dock [data-app-id="file-manager"] .dock-icon { background: linear-gradient(145deg, #fff4de, #ffe0bb); }
-#dock [data-app-id="learning-center"] .dock-icon { background: linear-gradient(145deg, #e8f3ff, #d1e4ff); }
-#dock [data-app-id="command-reference"] .dock-icon { background: linear-gradient(145deg, #fff0f5, #f4d8e8); }
-#dock [data-app-id="text-editor"] .dock-icon { background: linear-gradient(145deg, #fff1dc, #ffdfc5); }
-#dock [data-app-id="system-monitor"] .dock-icon { background: linear-gradient(145deg, #e6f6fb, #cdeaf3); }
-#dock [data-app-id="calculator"] .dock-icon { background: linear-gradient(145deg, #f0eaff, #ddd3fa); }
-#dock [data-app-id="settings"] .dock-icon { background: linear-gradient(145deg, #ffeaf0, #f6d5e3); }
+#dock [data-app-id="terminal"] .dock-icon { background: linear-gradient(145deg, #bff3dd, #7be0bd); }
+#dock [data-app-id="file-manager"] .dock-icon { background: linear-gradient(145deg, #ffe6b7, #ffc879); }
+#dock [data-app-id="learning-center"] .dock-icon { background: linear-gradient(145deg, #d8ecff, #acd3ff); }
+#dock [data-app-id="command-reference"] .dock-icon { background: linear-gradient(145deg, #ffd8e4, #ffadc5); }
+#dock [data-app-id="text-editor"] .dock-icon { background: linear-gradient(145deg, #ffe1c1, #ffbd8b); }
+#dock [data-app-id="system-monitor"] .dock-icon { background: linear-gradient(145deg, #ccf4fb, #8bdeef); }
+#dock [data-app-id="calculator"] .dock-icon { background: linear-gradient(145deg, #e3dcff, #b8a8ff); }
+#dock [data-app-id="settings"] .dock-icon { background: linear-gradient(145deg, #ffd9e5, #ffaec6); }
 
 .dock-indicator,
 .dock-item.is-active .dock-indicator {
-  background-color: #c595d9;
-  box-shadow: 0 0 7px rgba(197, 149, 217, 0.7);
+  background-color: var(--palette-coral);
+  box-shadow: 0 0 7px rgba(255, 111, 145, 0.7);
 }
 
 .launcher-overlay {
@@ -296,29 +310,29 @@ body.dark-theme .win-btn {
 
 .launcher-search-input:focus {
   border-color: var(--accent-lavender);
-  box-shadow: 0 0 0 3px rgba(197, 166, 232, 0.3);
+  box-shadow: 0 0 0 3px rgba(135, 104, 247, 0.22);
 }
 
 .launcher-cat-btn {
-  background: rgba(197, 166, 232, 0.16);
+  background: rgba(135, 104, 247, 0.12);
   color: var(--text-primary);
 }
 
 .launcher-cat-btn.active {
-  background: #eadcf8;
-  color: #674d81;
+  background: linear-gradient(135deg, #bff3dd, #d5c9ff);
+  color: #302141;
 }
 
 body.dark-theme .launcher-cat-btn.active {
-  background: #574568;
-  color: #fff4fb;
+  background: linear-gradient(135deg, #62d6b0, #b6a3ff);
+  color: #241735;
 }
 
 .launcher-card {
   border: 1px solid var(--border-color);
   border-radius: 22px;
-  background: rgba(255, 255, 255, 0.56);
-  box-shadow: 0 7px 18px rgba(81, 59, 101, 0.08);
+  background: rgba(255, 255, 255, 0.72);
+  box-shadow: 0 7px 18px rgba(74, 44, 104, 0.08);
 }
 
 body.dark-theme .launcher-card {
@@ -327,7 +341,7 @@ body.dark-theme .launcher-card {
 
 .launcher-card:hover {
   border-color: var(--accent-lavender);
-  background: rgba(197, 166, 232, 0.2);
+  background: rgba(135, 104, 247, 0.12);
 }
 
 .launcher-card-icon {
@@ -337,8 +351,8 @@ body.dark-theme .launcher-card {
   place-items: center;
   border: 1px solid rgba(255, 255, 255, 0.8);
   border-radius: 21px;
-  background: linear-gradient(145deg, #fffdfd, #f3e8f5);
-  box-shadow: 0 5px 12px rgba(83, 61, 101, 0.14);
+  background: linear-gradient(145deg, #fffdfd, #f3e9ff);
+  box-shadow: 0 5px 12px rgba(74, 44, 104, 0.14);
   font-size: 34px;
   filter: none;
 }
@@ -368,24 +382,24 @@ body.dark-theme .launcher-card {
 }
 
 .settings-nav-item.active {
-  background: linear-gradient(135deg, #a9e3ce, #ceb1e9);
-  color: #382846;
+  background: linear-gradient(135deg, #b7efd9, #cbbaff);
+  color: #302141;
 }
 
 body.dark-theme .settings-nav-item.active {
-  background: linear-gradient(135deg, #9bdcc7, #c8a9e5);
-  color: #342642;
+  background: linear-gradient(135deg, #62d6b0, #b6a3ff);
+  color: #241735;
 }
 
 .theme-btn-card.selected {
-  background: linear-gradient(135deg, #a9e3ce, #ceb1e9);
-  color: #382846;
+  background: linear-gradient(135deg, #b7efd9, #cbbaff);
+  color: #302141;
   border-color: transparent;
 }
 
 body.dark-theme .theme-btn-card.selected {
-  background: linear-gradient(135deg, #9bdcc7, #c8a9e5);
-  color: #342642;
+  background: linear-gradient(135deg, #62d6b0, #b6a3ff);
+  color: #241735;
 }
 
 .btn-action,
@@ -397,17 +411,70 @@ body.dark-theme .theme-btn-card.selected {
 .code-run-btn,
 .sysmon-btn-kill,
 .launcher-cat-btn.active {
-  color: #382846;
+  color: #fffdfb;
+}
+
+.btn-action,
+.btn-complete {
+  background-color: var(--accent-green);
+}
+
+.btn-danger,
+.sysmon-btn-kill {
+  background-color: var(--accent-danger);
+}
+
+.btn-open-terminal {
+  background-color: var(--accent-lavender);
+}
+
+.ch-submit-btn {
+  background-color: var(--accent-cyan);
+}
+
+.hint-run-btn,
+.code-run-btn {
+  background-color: rgba(47, 184, 215, 0.16);
+  color: var(--accent-cyan);
+}
+
+.btn-action:hover,
+.btn-complete:hover,
+.btn-danger:hover,
+.sysmon-btn-kill:hover,
+.btn-open-terminal:hover,
+.ch-submit-btn:hover {
+  filter: brightness(0.92);
+}
+
+.launcher-cat-btn.active,
+body.dark-theme .launcher-cat-btn.active {
+  color: #241735;
+}
+
+body.dark-theme .btn-action,
+body.dark-theme .btn-complete,
+body.dark-theme .btn-danger,
+body.dark-theme .sysmon-btn-kill,
+body.dark-theme .btn-open-terminal,
+body.dark-theme .ch-submit-btn {
+  color: #241735;
+}
+
+body.dark-theme .hint-run-btn,
+body.dark-theme .code-run-btn {
+  background-color: rgba(105, 215, 235, 0.16);
+  color: var(--accent-cyan);
 }
 
 .fm-crumb:hover,
 .fm-place-item:hover {
-  color: #49365c;
+  color: var(--text-primary);
 }
 
 .wallpaper-card.selected {
   border-color: var(--accent-lavender);
-  box-shadow: 0 0 0 2px rgba(197, 166, 232, 0.5), 0 7px 18px rgba(94, 69, 112, 0.1);
+  box-shadow: 0 0 0 2px rgba(135, 104, 247, 0.42), 0 7px 18px rgba(74, 44, 104, 0.1);
 }
 
 .settings-nav-icon {
@@ -416,7 +483,7 @@ body.dark-theme .theme-btn-card.selected {
   height: 28px;
   place-items: center;
   border-radius: 10px;
-  background: rgba(197, 166, 232, 0.18);
+  background: rgba(135, 104, 247, 0.16);
   font-size: 15px;
 }
 
@@ -424,8 +491,8 @@ body.dark-theme .theme-btn-card.selected {
 .lesson-card-item.selected,
 .challenge-card.solved {
   border-color: var(--accent-lavender);
-  background-color: rgba(197, 166, 232, 0.16);
-  box-shadow: 0 0 0 1px rgba(197, 166, 232, 0.35);
+  background-color: rgba(135, 104, 247, 0.12);
+  box-shadow: 0 0 0 1px rgba(135, 104, 247, 0.32);
 }
 
 .fm-item:hover,
@@ -433,7 +500,7 @@ body.dark-theme .theme-btn-card.selected {
 .fm-crumb:hover,
 .cmd-chip:hover,
 .ch-hint-toggle:hover {
-  background-color: rgba(197, 166, 232, 0.18);
+  background-color: rgba(135, 104, 247, 0.16);
   color: var(--text-primary);
 }
 
@@ -451,8 +518,13 @@ body.dark-theme .theme-btn-card.selected {
 }
 
 .fm-copy-path:hover {
-  background: #e4d1f4;
-  color: #342642;
+  background: #d7ceff;
+  color: #302141;
+}
+
+body.dark-theme .fm-copy-path:hover {
+  background: #b6a3ff;
+  color: #241735;
 }
 
 .fm-item:focus-visible {
@@ -490,18 +562,133 @@ body.dark-theme .theme-btn-card.selected {
 
 .context-item:hover,
 .cal-day.today {
-  background-color: #d3b3f0;
-  color: #342642;
+  background-color: #d7ceff;
+  color: #302141;
+}
+
+body.dark-theme .context-item:hover,
+body.dark-theme .cal-day.today {
+  background-color: #b6a3ff;
+  color: #241735;
+}
+
+.app-dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 20000;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(25, 16, 39, 0.48);
+  backdrop-filter: blur(5px);
+}
+
+.app-dialog {
+  width: min(440px, 100%);
+  max-height: min(90vh, 680px);
+  overflow: auto;
+  padding: 24px;
+  border: 1px solid var(--border-color);
+  border-radius: 24px;
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  box-shadow: var(--win-shadow);
+}
+
+.app-dialog-title {
+  margin-bottom: 10px;
+  font-size: 20px;
+}
+
+.app-dialog-message {
+  margin-bottom: 18px;
+  color: var(--text-secondary);
+  white-space: pre-wrap;
+  user-select: text;
+}
+
+.app-dialog-form {
+  display: grid;
+  gap: 16px;
+}
+
+.app-dialog-input {
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 12px;
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+.app-dialog-input:focus-visible,
+.app-dialog-button:focus-visible {
+  outline: 3px solid var(--accent-lavender);
+  outline-offset: 2px;
+}
+
+.app-dialog-error {
+  margin-top: -8px;
+  color: #b42345;
+  font-size: 13px;
+}
+
+body.dark-theme .app-dialog-error {
+  color: #ffabbc;
+}
+
+.app-dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.app-dialog-button {
+  min-height: 40px;
+  padding: 8px 16px;
+  border: 1px solid var(--border-color);
+  border-radius: 13px;
+  color: var(--text-primary);
+  font-weight: 650;
+}
+
+.app-dialog-cancel {
+  background: var(--bg-primary);
+}
+
+.app-dialog-confirm {
+  background: #d7ceff;
+  color: #302141;
+}
+
+.app-dialog-danger {
+  background: #f3a5b6;
+  color: #3f1d38;
+}
+
+body.dark-theme .app-dialog-confirm {
+  background: #b6a3ff;
+  color: #241735;
+}
+
+body.dark-theme .app-dialog-danger {
+  background: #e19898;
+  color: #3f1d38;
+}
+
+.app-dialog-button:hover {
+  filter: brightness(0.96);
 }
 
 .terminal-container.theme-cyber-green {
-  background-color: #262238;
-  color: #c8f2df;
+  background-color: #211832;
+  color: #8de8c7;
 }
 
 .terminal-container.theme-gnome-dark {
-  background-color: #302a43;
-  color: #f1e7fb;
+  background-color: #33254c;
+  color: #fff0f7;
 }
 
 .terminal-toolbar {

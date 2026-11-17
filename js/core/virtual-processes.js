@@ -1,5 +1,6 @@
 import { SecurityLimits } from '../security/limits.js';
 import { sysEvents } from './event-bus.js';
+import { SYSTEM_INFO } from './system-info.js';
 
 /**
  * VirtualProcesses
@@ -23,8 +24,8 @@ export class VirtualProcesses {
       { pid: 680, ppid: 1, user: 'root', cpu: 0.1, mem: 0.9, stat: 'Ssl', command: '/usr/sbin/NetworkManager', startTime: '08:00' },
       { pid: 710, ppid: 1, user: 'messagebus', cpu: 0.0, mem: 0.3, stat: 'Ss', command: '@dbus-daemon --system', startTime: '08:00' },
       { pid: 1240, ppid: 1, user: 'root', cpu: 0.0, mem: 0.5, stat: 'Ss', command: 'sshd: /usr/sbin/sshd -D', startTime: '08:12' },
-      { pid: 1450, ppid: 1, user: 'student', cpu: 0.2, mem: 2.1, stat: 'Ssl', command: '/usr/bin/gnome-shell', startTime: '08:15' },
-      { pid: 1520, ppid: 1450, user: 'student', cpu: 0.1, mem: 0.7, stat: 'Ss', command: '-bash', tty: 'pts/0', startTime: '08:15' }
+      { pid: 1450, ppid: 1, user: SYSTEM_INFO.username, cpu: 0.2, mem: 2.1, stat: 'Ssl', command: '/usr/bin/gnome-shell', startTime: '08:15' },
+      { pid: 1520, ppid: 1450, user: SYSTEM_INFO.username, cpu: 0.1, mem: 0.7, stat: 'Ss', command: '-bash', tty: 'pts/0', startTime: '08:15' }
     ];
 
     for (const p of defaults) {
@@ -55,7 +56,7 @@ export class VirtualProcesses {
     return this.processes.get(Number(pid));
   }
 
-  create(command, user = 'student', options = {}) {
+  create(command, user = SYSTEM_INFO.username, options = {}) {
     if (this.processes.size >= SecurityLimits.MAX_PROCESSES) {
       return { success: false, error: 'Process limit reached' };
     }
@@ -79,7 +80,7 @@ export class VirtualProcesses {
     return { success: true, process: proc };
   }
 
-  kill(pid, signal = 15, user = 'student') {
+  kill(pid, signal = 15, user = SYSTEM_INFO.username) {
     const p = this.processes.get(Number(pid));
     if (!p) {
       return { success: false, error: `No such process: ${pid}` };
@@ -96,7 +97,7 @@ export class VirtualProcesses {
     return { success: true, process: p };
   }
 
-  killByName(name, user = 'student') {
+  killByName(name, user = SYSTEM_INFO.username) {
     let killed = 0;
     for (const [pid, p] of Array.from(this.processes.entries())) {
       if (p.command.includes(name)) {
@@ -116,11 +117,11 @@ export class VirtualProcesses {
     return {
       cpuUsage: Math.min(99, (totalCpu + (Math.random() * 4 - 2)).toFixed(1)),
       memUsage: Math.min(95, (totalMem + (Math.random() * 2 - 1)).toFixed(1)),
-      totalMemMB: 4096,
-      usedMemMB: Math.round(4096 * (totalMem / 100)),
-      totalDiskGB: 40,
+      totalMemMB: SYSTEM_INFO.memoryMB,
+      usedMemMB: Math.round(SYSTEM_INFO.memoryMB * (totalMem / 100)),
+      totalDiskGB: SYSTEM_INFO.storageGB,
       usedDiskGB: 8.4,
-      diskUsagePercent: 21
+      diskUsagePercent: Number((8.4 / SYSTEM_INFO.storageGB * 100).toFixed(1))
     };
   }
 }

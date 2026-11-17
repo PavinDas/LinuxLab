@@ -1,5 +1,6 @@
 import { Sanitizer } from '../security/sanitizer.js';
 import { sysEvents } from '../core/event-bus.js';
+import { SYSTEM_INFO } from '../core/system-info.js';
 
 /**
  * SystemMonitorApp (GNOME System Monitor style)
@@ -66,14 +67,14 @@ export class SystemMonitorApp {
 
     // CPU Card
     const cpuCard = Sanitizer.createElement('div', { className: 'sysmon-card' }, [
-      Sanitizer.createElement('div', { className: 'card-header' }, 'CPU Usage (Simulated Intel Core i7)'),
+      Sanitizer.createElement('div', { className: 'card-header' }, `CPU Usage (${SYSTEM_INFO.cpuCount} virtual CPUs)`),
       Sanitizer.createElement('div', { className: 'meter-bar-wrapper' }, [
         Sanitizer.createElement('div', {
           className: 'meter-bar-fill',
           style: { width: `${stats.cpuUsage}%` }
         })
       ]),
-      Sanitizer.createElement('div', { className: 'card-value' }, `${stats.cpuUsage}% (8 Cores)`)
+      Sanitizer.createElement('div', { className: 'card-value' }, `${stats.cpuUsage}% (${SYSTEM_INFO.cpuCount} Cores)`)
     ]);
 
     // Memory Card
@@ -102,7 +103,7 @@ export class SystemMonitorApp {
 
     // Educational Note
     const notice = Sanitizer.createElement('div', { className: 'sysmon-notice' },
-      'ℹ️ Note: These metrics represent the simulated CyberLinux environment, completely isolated from your host operating system.'
+      'ℹ️ Note: These metrics represent the simulated Panda OS environment, completely isolated from your host operating system.'
     );
 
     resGrid.appendChild(cpuCard);
@@ -165,7 +166,11 @@ export class SystemMonitorApp {
         if (this.selectedPid) {
           const res = this.processes.kill(this.selectedPid, 15, this.users.getCurrentUsername());
           if (!res.success) {
-            alert(res.error);
+            sysEvents.emit('notify', {
+              title: 'Could Not End Process',
+              message: res.error,
+              type: 'error'
+            });
           } else {
             this.selectedPid = null;
             this.renderProcesses();

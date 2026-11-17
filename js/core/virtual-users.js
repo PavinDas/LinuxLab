@@ -1,3 +1,5 @@
+import { SYSTEM_INFO } from './system-info.js';
+
 /**
  * Virtual Users and Groups Manager
  * Simulates Linux user context, uid/gid, /etc/passwd and /etc/shadow information,
@@ -7,7 +9,8 @@ export class VirtualUsers {
   constructor() {
     this.users = new Map([
       ['root', { uid: 0, gid: 0, home: '/root', shell: '/bin/bash', groups: ['root'], realname: 'System Administrator' }],
-      ['student', { uid: 1000, gid: 1000, home: '/home/student', shell: '/bin/bash', groups: ['student', 'sudo', 'adm', 'netdev'], realname: 'Cybersecurity Student' }],
+      ['kiddy', { uid: 1000, gid: 1000, home: SYSTEM_INFO.home, shell: '/bin/bash', groups: ['kiddy', 'sudo', 'adm', 'netdev'], realname: 'Panda OS User' }],
+      ['student', { uid: 1001, gid: 1001, home: '/home/student', shell: '/bin/bash', groups: ['student'], realname: 'Cybersecurity Student' }],
       ['daemon', { uid: 1, gid: 1, home: '/usr/sbin', shell: '/usr/sbin/nologin', groups: ['daemon'], realname: 'daemon' }],
       ['syslog', { uid: 104, gid: 110, home: '/home/syslog', shell: '/usr/sbin/nologin', groups: ['syslog', 'adm'], realname: 'syslog' }],
       ['nobody', { uid: 65534, gid: 65534, home: '/nonexistent', shell: '/usr/sbin/nologin', groups: ['nogroup'], realname: 'nobody' }]
@@ -16,18 +19,20 @@ export class VirtualUsers {
     this.groups = new Map([
       ['root', { gid: 0, members: ['root'] }],
       ['daemon', { gid: 1, members: ['daemon'] }],
-      ['adm', { gid: 4, members: ['syslog', 'student'] }],
-      ['sudo', { gid: 27, members: ['student'] }],
-      ['student', { gid: 1000, members: ['student'] }],
+      ['adm', { gid: 4, members: ['syslog', 'kiddy'] }],
+      ['sudo', { gid: 27, members: ['kiddy'] }],
+      ['netdev', { gid: 110, members: ['kiddy'] }],
+      ['kiddy', { gid: 1000, members: ['kiddy'] }],
+      ['student', { gid: 1001, members: ['student'] }],
       ['nogroup', { gid: 65534, members: ['nobody'] }]
     ]);
 
-    this.currentUser = 'student';
-    this.hostname = 'cyberlinux';
+    this.currentUser = SYSTEM_INFO.username;
+    this.hostname = SYSTEM_INFO.hostname;
   }
 
   getCurrentUser() {
-    const data = this.users.get(this.currentUser) || this.users.get('student');
+    const data = this.users.get(this.currentUser) || this.users.get(SYSTEM_INFO.username);
     return { name: this.currentUser, ...data };
   }
 
@@ -88,7 +93,7 @@ export class VirtualUsers {
 
   deleteUser(username) {
     if (!this.users.has(username)) return { success: false, error: `User '${username}' does not exist` };
-    if (username === 'root' || username === 'student') return { success: false, error: 'Cannot delete system core user' };
+    if (username === 'root' || username === SYSTEM_INFO.username) return { success: false, error: 'Cannot delete system core user' };
     this.users.delete(username);
     return { success: true };
   }

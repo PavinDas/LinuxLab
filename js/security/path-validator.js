@@ -1,4 +1,5 @@
 import { SecurityLimits } from './limits.js';
+import { SYSTEM_INFO } from '../core/system-info.js';
 
 /**
  * PathValidator
@@ -11,10 +12,11 @@ export class PathValidator {
    * Resolves '.', '..', redundant slashes, and ensures boundary safety.
    *
    * @param {string} rawPath The path provided by user or command.
-   * @param {string} cwd The current working directory (must be absolute, e.g. "/home/student").
-   * @returns {string} Normalized absolute virtual path (e.g. "/home/student/Documents").
+   * @param {string} cwd The current working directory.
+   * @param {string} homePath The active user's home directory.
+   * @returns {string} Normalized absolute virtual path.
    */
-  static normalize(rawPath, cwd = '/') {
+  static normalize(rawPath, cwd = '/', homePath = SYSTEM_INFO.home) {
     if (typeof rawPath !== 'string') {
       return '/';
     }
@@ -24,9 +26,9 @@ export class PathValidator {
       trimmed = trimmed.substring(0, SecurityLimits.MAX_PATH_LENGTH);
     }
 
-    // Handle home tilde expansion if cwd is provided
+    // Expand the active user's home directory.
     if (trimmed === '~' || trimmed.startsWith('~/')) {
-      trimmed = trimmed === '~' ? '/home/student' : '/home/student/' + trimmed.slice(2);
+      trimmed = trimmed === '~' ? homePath : `${homePath}/${trimmed.slice(2)}`;
     }
 
     // Determine base: if path starts with '/', it's absolute; otherwise relative to cwd
@@ -78,14 +80,15 @@ export class PathValidator {
   }
 
   /**
-   * Validate filename: no null bytes, no slashes, reasonable length
+   * Validate a single path segment with no separators or control characters.
    * @param {string} name 
    * @returns {boolean}
    */
   static isValidFilename(name) {
     if (!name || typeof name !== 'string') return false;
-    if (name.includes('/') || name.includes('\0')) return false;
+    if (/[\/\\\u0000-\u001f\u007f-\u009f\u202a-\u202e\u2066-\u2069]/.test(name)) return false;
     if (name === '.' || name === '..') return false;
-    return name.length <= 255;
+    if (!name.trim()) return false;
+    return name.length <= SecurityLimits.MAX_FILENAME_LENGTH;
   }
 }

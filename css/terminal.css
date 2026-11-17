@@ -128,3 +128,10 @@
   font-size: inherit;
   caret-color: #22c55e;
 }
+
+.terminal-input:focus,
+.terminal-input:focus-visible {
+  border: none;
+  outline: none;
+  box-shadow: none;
+}
