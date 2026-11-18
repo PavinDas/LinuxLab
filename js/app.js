@@ -29,6 +29,9 @@ import { SettingsApp } from './apps/settings-app.js';
 import { CommandReferenceApp } from './apps/command-reference-app.js';
 import { ImageViewerApp } from './apps/image-viewer-app.js';
 import { AboutApp } from './apps/about-app.js';
+import { CommandQuestApp } from './apps/command-quest-app.js';
+import { ProgressManager } from './learning/progress-manager.js';
+import { seedQuestEnvironment } from './learning/quest-environment.js';
 
 const WALLPAPER_CLASSES = {
   mascot: 'wp-mascot',
@@ -66,6 +69,8 @@ export class CyberLinux {
     this.vfs.ensurePandaOSProfile();
     this.vfs.ensureForensicImages();
     this.vfs.ensureUserPhotos();
+    seedQuestEnvironment(this.vfs, this.users, this.processes);
+    this.progress = new ProgressManager(this.storage);
     const hostname = this.vfs.readFile('/etc/hostname', '/', { name: 'root', uid: 0, groups: ['root'] });
     this.network.hostname = hostname.success ? hostname.content.trim() : SYSTEM_INFO.hostname;
     this.users.hostname = this.network.hostname;
@@ -99,6 +104,7 @@ export class CyberLinux {
 
     // App registry for launcher
     this.appCatalog = [
+      { id: 'command-quest', name: 'Command Quest', icon: '🚩', category: 'Cybersecurity', description: 'Progressive Linux command learning CTF lab' },
       { id: 'terminal', name: 'Terminal', icon: '💻', category: 'System', description: 'Bash-compatible command line environment' },
       { id: 'file-manager', name: 'Files', icon: '📁', category: 'System', description: 'Explore files, folders, and permissions' },
       { id: 'command-reference', name: 'Command Reference', icon: '📖', category: 'Cybersecurity', description: 'Searchable master catalog of 150+ Linux commands' },
@@ -183,6 +189,7 @@ export class CyberLinux {
     const welcomeEntry = entries.find(entry => entry.type === 'file' && entry.name === 'welcome.txt');
     const desktopItems = [
       ...(welcomeEntry ? [makeFileItem(welcomeEntry)] : []),
+      { id: 'quest', name: 'Command Quest', icon: '🚩', action: () => this.launchApp('command-quest') },
       { id: 'term', name: 'Terminal', icon: '💻', action: () => this.launchApp('terminal') },
       { id: 'files', name: 'Files', icon: '📁', action: () => this.launchApp('file-manager') },
       { id: 'ref', name: 'Commands', icon: '📖', action: () => this.launchApp('command-reference') },
@@ -253,6 +260,16 @@ export class CyberLinux {
     let appInstance = null;
 
     switch (appId) {
+      case 'command-quest':
+      case 'learning-center':
+        title = 'Linux Command Quest';
+        icon = '🚩';
+        width = 1040;
+        height = 640;
+        appInstance = new CommandQuestApp(this.progress, this.vfs, this.users, (id, opt) => this.launchApp(id, opt), this.dialogs);
+        appContent = appInstance.createUI();
+        break;
+
       case 'terminal':
         title = 'Terminal';
         icon = '💻';

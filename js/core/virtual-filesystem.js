@@ -805,7 +805,8 @@ for p in ports:
         sgid: node.sgid,
         sticky: node.sticky,
         content: node.content || '',
-        assetId: node.assetId || null
+        assetId: node.assetId || null,
+        navMessage: node.navMessage || null
       };
       if (node.type === 'dir') {
         obj.children = {};
@@ -889,6 +890,7 @@ for p in ports:
           mtime: obj.mtime,
           content,
           assetId: typeof obj.assetId === 'string' && /^[a-z0-9-]+$/.test(obj.assetId) ? obj.assetId : null,
+          navMessage: typeof obj.navMessage === 'string' ? obj.navMessage.slice(0, 500) : null,
           suid: !!obj.suid,
           sgid: !!obj.sgid,
           sticky: !!obj.sticky

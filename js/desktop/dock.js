@@ -13,6 +13,7 @@ export class Dock {
     this.items = new Map();
 
     this.defaultApps = [
+      { id: 'command-quest', name: 'Command Quest', icon: '🚩' },
       { id: 'terminal', name: 'Terminal', icon: '💻' },
       { id: 'file-manager', name: 'Files', icon: '📁' },
       { id: 'command-reference', name: 'Reference', icon: '📖' },

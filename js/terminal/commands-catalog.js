@@ -408,7 +408,8 @@ export function registerAllCommands(registry, vfs, users, processes, network) {
       ctx.env.OLDPWD = ctx.cwd;
       ctx.cwd = norm;
       ctx.env.PWD = norm;
-      return { exitCode: 0, newCwd: norm };
+      const navOut = node.navMessage ? `${node.navMessage}\n` : '';
+      return { exitCode: 0, stdout: navOut, newCwd: norm };
     }
   });
 
