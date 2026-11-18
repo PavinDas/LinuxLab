@@ -1,6 +1,7 @@
 import { PathValidator } from '../security/path-validator.js';
 import { VirtualPermissions } from '../core/virtual-permissions.js';
 import { SYSTEM_INFO } from '../core/system-info.js';
+import { sysEvents } from '../core/event-bus.js';
 
 /**
  * Extended Command Catalog
@@ -255,22 +256,74 @@ export function registerExtendedCommands(registry, vfs, users, processes, networ
     }
   });
 
+  const handleEditorLaunch = (args, ctx, editorName) => {
+    const file = args.find(a => !a.startsWith('-'));
+    const norm = file ? PathValidator.normalize(file, ctx.cwd, ctx.user.home) : undefined;
+    sysEvents.emit('app:launch', { id: 'text-editor', options: { path: norm } });
+    return {
+      exitCode: 0,
+      stdout: `[Opening ${norm || 'untitled'} in Text Editor (${editorName})...]\n`
+    };
+  };
+
   registry.register({
     name: 'nano',
-    aliases: ['vim', 'vi'],
+    aliases: ['vim', 'vi', 'nvim'],
     category: '1. Linux Fundamentals',
-    description: 'Terminal text editor',
+    description: 'Text editor (GUI)',
     syntax: 'nano [file]',
     options: [],
-    practicalUse: 'Edit scripts, modify hosts files, and craft exploits.',
+    practicalUse: 'Edit scripts, modify configuration files, and craft text in the GUI Text Editor.',
     example: 'nano script.sh',
     expectedOutput: '[Opened file in Text Editor]',
+    execute: (args, ctx) => handleEditorLaunch(args, ctx, 'nano')
+  });
+
+  registry.register({
+    name: 'vim',
+    aliases: ['vi'],
+    category: '1. Linux Fundamentals',
+    description: 'Vim text editor (GUI)',
+    syntax: 'vim [file]',
+    options: [],
+    practicalUse: 'Edit documents and scripts in the GUI Text Editor.',
+    example: 'vim script.py',
+    expectedOutput: '[Opened file in Text Editor]',
+    execute: (args, ctx) => handleEditorLaunch(args, ctx, 'vim')
+  });
+
+  registry.register({
+    name: 'nvim',
+    category: '1. Linux Fundamentals',
+    description: 'Neovim text editor (GUI)',
+    syntax: 'nvim [file]',
+    options: [],
+    practicalUse: 'Edit documents and scripts in the GUI Text Editor.',
+    example: 'nvim main.rs',
+    expectedOutput: '[Opened file in Text Editor]',
+    execute: (args, ctx) => handleEditorLaunch(args, ctx, 'nvim')
+  });
+
+  registry.register({
+    name: 'feh',
+    aliases: ['eog', 'display', 'viewnior'],
+    category: '1. Linux Fundamentals',
+    description: 'Image viewer (GUI)',
+    syntax: 'feh <image-path>',
+    options: [],
+    practicalUse: 'Display pictures and graphical assets in the GUI Image Viewer.',
+    example: 'feh ~/Pictures/mascot.svg',
+    expectedOutput: '[Opened image in Image Viewer]',
     execute: (args, ctx) => {
-      const file = args[0];
-      const norm = file ? PathValidator.normalize(file, ctx.cwd, ctx.user.home) : `${ctx.user.home}/untitled.txt`;
+      const file = args.find(a => !a.startsWith('-'));
+      if (!file) {
+        return { exitCode: 1, stderr: 'feh: no image file specified\n' };
+      }
+      const norm = PathValidator.normalize(file, ctx.cwd, ctx.user.home);
+      sysEvents.emit('app:launch', { id: 'image-viewer', options: { path: norm } });
       return {
         exitCode: 0,
-        stdout: `[Nano Simulation: You can also use the graphical Text Editor from the dock to edit '${norm}' with full syntax highlighting!]\n`
+        stdout: `[Opening ${norm} in Image Viewer...]\n`
       };
     }
   });

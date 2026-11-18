@@ -37,19 +37,19 @@
 
 /* Dark Theme Overrides */
 body.dark-theme {
-  --bg-primary: #0f172a;
-  --bg-surface: #1e293b;
-  --bg-surface-translucent: rgba(30, 41, 59, 0.88);
-  --bg-panel: rgba(15, 23, 42, 0.88);
-  --bg-dock: rgba(30, 41, 59, 0.78);
+  --bg-primary: #0a1120;
+  --bg-surface: #131c2e;
+  --bg-surface-translucent: rgba(19, 28, 46, 0.92);
+  --bg-panel: rgba(10, 17, 32, 0.92);
+  --bg-dock: rgba(19, 28, 46, 0.82);
   --border-color: rgba(51, 65, 85, 0.7);
 
   --text-primary: #f8fafc;
-  --text-secondary: #94a3b8;
-  --text-muted: #64748b;
+  --text-secondary: #a0b3cc;
+  --text-muted: #6b7f99;
 
-  --win-titlebar-bg: #1e293b;
-  --win-shadow: 0 18px 45px rgba(0, 0, 0, 0.45), 0 6px 16px rgba(0, 0, 0, 0.35);
+  --win-titlebar-bg: #162032;
+  --win-shadow: 0 18px 45px rgba(0, 0, 0, 0.55), 0 6px 16px rgba(0, 0, 0, 0.4);
 }
 
 * {

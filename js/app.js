@@ -133,10 +133,15 @@ export class CyberLinux {
           { icon: '💻', label: 'Open Terminal', action: () => this.launchApp('terminal') },
           { icon: '📁', label: 'New Folder', action: () => this.promptDesktopNewFolder() },
           { separator: true },
-          { icon: '🖼️', label: 'Change Wallpaper', action: () => this.launchApp('settings') },
+          { icon: '🖼️', label: 'Change Wallpaper', action: () => this.launchApp('settings', { section: 'wallpapers' }) },
           { icon: '⚙️', label: 'Settings', action: () => this.launchApp('settings') }
         ], e.clientX, e.clientY);
       }
+    });
+
+    // Listen for global app launch requests (e.g. from terminal commands)
+    sysEvents.on('app:launch', ({ id, options = {} }) => {
+      this.launchApp(id, options);
     });
 
     // Handle terminal direct execution events from Reference/Learning Center
@@ -240,12 +245,18 @@ export class CyberLinux {
     // If already open, focus it
     if (this.wm.windows.has(appId)) {
       const win = this.wm.windows.get(appId);
-      if (appId === 'image-viewer' && options.path) {
+      if (appId === 'image-viewer' && options.path && win.appInstance?.loadImage) {
         win.appInstance.loadImage(options.path);
-        win.appInstance.titleLabel.textContent = options.path.split('/').pop();
+        if (win.appInstance.titleLabel) win.appInstance.titleLabel.textContent = options.path.split('/').pop();
       }
-      if (appId === 'file-manager' && options.path) {
+      if (appId === 'file-manager' && options.path && win.appInstance?.navigateTo) {
         win.appInstance.navigateTo(options.path);
+      }
+      if (appId === 'text-editor' && options.path && win.appInstance?.loadFile) {
+        win.appInstance.loadFile(options.path);
+      }
+      if (appId === 'settings' && options.section && win.appInstance?.navigateToSection) {
+        win.appInstance.navigateToSection(options.section);
       }
       if (win.minimized) this.wm.restoreWindow(appId);
       this.wm.focusWindow(appId);
@@ -330,7 +341,7 @@ export class CyberLinux {
         icon = '⚙️';
         width = 880;
         height = 580;
-        appInstance = new SettingsApp(this.storage, this.users, this.dialogs);
+        appInstance = new SettingsApp(this.storage, this.users, this.dialogs, options.section || 'appearance');
         appContent = appInstance.createUI();
         break;
 

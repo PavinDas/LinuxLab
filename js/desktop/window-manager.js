@@ -15,7 +15,7 @@ export class WindowManager {
     this.cascadeOffset = 0;
   }
 
-  createWindow({ id, title, icon, width = 640, height = 440, minWidth = 360, minHeight = 240, content, onFocus, onClose }) {
+  createWindow({ id, title, icon, width = 640, height = 440, minWidth = 360, minHeight = 240, content, appInstance, onFocus, onClose }) {
     // If window already exists, bring it to front
     if (this.windows.has(id)) {
       const existing = this.windows.get(id);
@@ -116,6 +116,7 @@ export class WindowManager {
       maximizeButton: maxBtn,
       minWidth,
       minHeight,
+      appInstance,
       onFocus,
       onClose
     };
@@ -221,6 +222,7 @@ export class WindowManager {
     const win = this.windows.get(id);
     if (!win) return;
 
+    const wasActive = (this.activeWindowId === id);
     this.activeWindowId = id;
     win.element.style.zIndex = `${++this.nextZIndex}`;
 
@@ -233,7 +235,7 @@ export class WindowManager {
       }
     }
 
-    if (typeof win.onFocus === 'function') {
+    if (!wasActive && typeof win.onFocus === 'function') {
       win.onFocus();
     }
 

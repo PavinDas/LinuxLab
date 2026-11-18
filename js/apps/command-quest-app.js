@@ -652,6 +652,9 @@ export class CommandQuestApp {
           this.feedbackState = null;
           this.renderChallengeList();
           this.renderChallengeDetail();
+          if (this.detailContainer) {
+            this.detailContainer.scrollTop = 0;
+          }
         }
       }, `← #${prevCh.number} ${prevCh.title}`);
       navFooter.appendChild(prevBtn);
@@ -663,20 +666,27 @@ export class CommandQuestApp {
     if (currentIndex + 1 < QuestChallengesData.length) {
       const nextCh = QuestChallengesData[currentIndex + 1];
       const isNextUnlocked = this.progress.isChallengeUnlocked(nextCh.id);
-      const nextBtn = Sanitizer.createElement('button', {
+      const nextBtnAttrs = {
         className: `quest-nav-btn next-btn ${!isNextUnlocked ? 'disabled' : ''}`,
-        disabled: !isNextUnlocked,
         title: isNextUnlocked ? `Go to ${nextCh.title}` : 'Solve current challenge to unlock next',
-        onClick: () => {
+        onClick: (e) => {
+          e.stopPropagation();
           if (isNextUnlocked) {
             this.selectedChallengeId = nextCh.id;
             this.progress.setCurrentChallengeId(nextCh.id);
             this.feedbackState = null;
             this.renderChallengeList();
             this.renderChallengeDetail();
+            if (this.detailContainer) {
+              this.detailContainer.scrollTop = 0;
+            }
           }
         }
-      }, isNextUnlocked ? `Next: #${nextCh.number} ${nextCh.title} →` : `🔒 Next: #${nextCh.number} (Locked)`);
+      };
+      if (!isNextUnlocked) {
+        nextBtnAttrs.disabled = true;
+      }
+      const nextBtn = Sanitizer.createElement('button', nextBtnAttrs, isNextUnlocked ? `Next: #${nextCh.number} ${nextCh.title} →` : `🔒 Next: #${nextCh.number} (Locked)`);
       navFooter.appendChild(nextBtn);
     }
 

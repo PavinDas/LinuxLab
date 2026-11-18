@@ -9,6 +9,7 @@ export class CalculatorApp {
   constructor() {
     this.expression = '';
     this.lastResult = '';
+    this.hasEvaluated = false;
   }
 
   createUI() {
@@ -70,6 +71,42 @@ export class CalculatorApp {
   }
 
   appendChar(char) {
+    const isOp = '+-*/%^'.includes(char);
+
+    // If calculation just completed
+    if (this.hasEvaluated) {
+      this.hasEvaluated = false;
+      if (isOp) {
+        this.expression = (this.lastResult || '0') + char;
+        this.updateDisplay();
+        return;
+      } else {
+        this.expression = '';
+      }
+    }
+
+    if (char === '.') {
+      // Prevent multiple dots in the same number token
+      const lastToken = this.expression.split(/[\+\-\*\/\%\^\(\)]/).pop();
+      if (lastToken.includes('.')) return;
+      if (!this.expression || '+-*/%^('.includes(this.expression.slice(-1))) {
+        this.expression += '0.';
+        this.updateDisplay();
+        return;
+      }
+    }
+
+    if (isOp && '+-*/%^'.includes(this.expression.slice(-1))) {
+      // Avoid duplicate consecutive binary operators (allow unary minus after op)
+      if (char === '-' && !'+-*/%^'.includes(this.expression.slice(-2, -1))) {
+        this.expression += char;
+      } else {
+        this.expression = this.expression.slice(0, -1) + char;
+      }
+      this.updateDisplay();
+      return;
+    }
+
     if (this.expression === '0' && !isNaN(char)) {
       this.expression = char;
     } else {
@@ -80,12 +117,15 @@ export class CalculatorApp {
 
   clearAll() {
     this.expression = '';
+    this.lastResult = '';
+    this.hasEvaluated = false;
     this.historyEl.textContent = '';
     this.updateDisplay();
   }
 
   clearEntry() {
     this.expression = this.expression.slice(0, -1);
+    this.hasEvaluated = false;
     this.updateDisplay();
   }
 
@@ -100,14 +140,25 @@ export class CalculatorApp {
 
   compute() {
     if (!this.expression) return;
-    const res = SafeMath.evaluate(this.expression);
+    let expr = this.expression.trim();
+    // Strip trailing operators before evaluation
+    while (expr.length > 0 && '+-*/%^'.includes(expr[expr.length - 1])) {
+      expr = expr.slice(0, -1).trim();
+    }
+    if (!expr) return;
+
+    const res = SafeMath.evaluate(expr);
     if (res.success) {
-      this.historyEl.textContent = `${this.expression} =`;
-      this.expression = String(res.value);
+      this.historyEl.textContent = `${expr} =`;
+      // Clean display of accurate mathematical number
+      const cleanNum = parseFloat(Number(res.value).toPrecision(12));
+      this.expression = String(cleanNum);
       this.lastResult = this.expression;
+      this.hasEvaluated = true;
       this.updateDisplay();
     } else {
       this.inputEl.textContent = res.error || 'Error';
+      this.hasEvaluated = true;
     }
   }
 

@@ -68,12 +68,10 @@ export class CommandRegistry {
       const matchesCat = (category === 'All' || cmd.category === category);
       if (!matchesCat) return false;
       if (!q) return true;
-      return (
-        cmd.name.toLowerCase().includes(q) ||
-        cmd.description.toLowerCase().includes(q) ||
-        cmd.syntax.toLowerCase().includes(q) ||
-        cmd.practicalUse.toLowerCase().includes(q)
-      );
+      // List the command only if the command name (or its aliases) contains the searched keyword
+      const nameMatch = cmd.name.toLowerCase().includes(q);
+      const aliasMatch = Array.isArray(cmd.aliases) && cmd.aliases.some(a => a.toLowerCase().includes(q));
+      return nameMatch || aliasMatch;
     });
   }
 }

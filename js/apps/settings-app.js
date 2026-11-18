@@ -7,18 +7,19 @@ import { sysEvents } from '../core/event-bus.js';
  * Personalization, themes, cute wallpapers, user management, backup/restore, and reset.
  */
 export class SettingsApp {
-  constructor(storageManager, users, dialogs) {
+  constructor(storageManager, users, dialogs, initialSection = 'appearance') {
     this.storage = storageManager;
     this.users = users;
     this.dialogs = dialogs;
-    this.activeSection = 'appearance'; // 'appearance' | 'wallpapers' | 'user' | 'backup'
+    this.activeSection = initialSection; // 'appearance' | 'wallpapers' | 'user' | 'backup'
+    this.sidebar = null;
   }
 
   createUI() {
     this.container = Sanitizer.createElement('div', { className: 'settings-container' });
 
     // Sidebar navigation
-    const sidebar = Sanitizer.createElement('div', { className: 'settings-sidebar' });
+    this.sidebar = Sanitizer.createElement('div', { className: 'settings-sidebar' });
     const sections = [
       { id: 'appearance', label: 'Appearance & Theme', icon: '🎨' },
       { id: 'wallpapers', label: 'Wallpapers', icon: '🖼️' },
@@ -30,26 +31,36 @@ export class SettingsApp {
       const btn = Sanitizer.createElement('button', {
         className: `settings-nav-item ${this.activeSection === sec.id ? 'active' : ''}`,
         onClick: () => {
-          this.activeSection = sec.id;
-          sidebar.querySelectorAll('.settings-nav-item').forEach(b => b.classList.remove('active'));
-          btn.classList.add('active');
-          this.renderSection();
+          this.navigateToSection(sec.id);
         }
       }, [
         Sanitizer.createElement('span', { className: 'settings-nav-icon' }, sec.icon),
         Sanitizer.createElement('span', {}, sec.label)
       ]);
-      sidebar.appendChild(btn);
+      btn.dataset.section = sec.id;
+      this.sidebar.appendChild(btn);
     }
 
     // Main Content
     this.mainArea = Sanitizer.createElement('div', { className: 'settings-main-area' });
 
-    this.container.appendChild(sidebar);
+    this.container.appendChild(this.sidebar);
     this.container.appendChild(this.mainArea);
 
     this.renderSection();
     return this.container;
+  }
+
+  navigateToSection(sectionId) {
+    const valid = ['appearance', 'wallpapers', 'user', 'backup'];
+    if (!valid.includes(sectionId)) return;
+    this.activeSection = sectionId;
+    if (this.sidebar) {
+      this.sidebar.querySelectorAll('.settings-nav-item').forEach(b => {
+        b.classList.toggle('active', b.dataset.section === sectionId);
+      });
+    }
+    this.renderSection();
   }
 
   renderSection() {

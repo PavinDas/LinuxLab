@@ -69,11 +69,13 @@ export class CommandReferenceApp {
     const commands = this.registry.search(this.searchQuery, this.activeCategory);
 
     if (commands.length === 0) {
+      this.selectedCommand = null;
       this.listCol.appendChild(Sanitizer.createElement('div', { className: 'cmdref-empty' }, 'No commands found matching query.'));
+      this.detailCol.innerHTML = '';
       return;
     }
 
-    if (!this.selectedCommand && commands.length > 0) {
+    if (!this.selectedCommand || !commands.some(c => c.name === this.selectedCommand.name)) {
       this.selectedCommand = commands[0];
     }
 

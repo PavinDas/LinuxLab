@@ -513,6 +513,10 @@ body:not(.dark-theme) .calc-btn-num {
   flex: 1;
   display: flex;
   background-color: var(--bg-surface);
+  height: 100%;
+  min-height: 0;
+  max-height: 100%;
+  overflow: hidden;
 }
 
 .settings-sidebar {
@@ -523,6 +527,8 @@ body:not(.dark-theme) .calc-btn-num {
   display: flex;
   flex-direction: column;
   gap: 4px;
+  height: 100%;
+  overflow-y: auto;
 }
 
 .settings-nav-item {
@@ -545,7 +551,32 @@ body:not(.dark-theme) .calc-btn-num {
 .settings-main-area {
   flex: 1;
   overflow-y: auto;
+  height: 100%;
+  min-height: 0;
+  max-height: 100%;
   padding: 24px;
+}
+
+.settings-main-area::-webkit-scrollbar,
+.settings-sidebar::-webkit-scrollbar {
+  width: 8px;
+}
+
+.settings-main-area::-webkit-scrollbar-track,
+.settings-sidebar::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 4px;
+}
+
+.settings-main-area::-webkit-scrollbar-thumb,
+.settings-sidebar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.25);
+  border-radius: 4px;
+}
+
+.settings-main-area::-webkit-scrollbar-thumb:hover,
+.settings-sidebar::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.4);
 }
 
 .settings-desc {
@@ -2527,9 +2558,36 @@ body:not(.dark-theme) .calc-btn-num {
   color: var(--accent-green);
 }
 
+.quest-nav-btn.next-btn:not(.disabled) {
+  background: #10b981;
+  color: #ffffff;
+  border: 1px solid #059669;
+  font-weight: 700;
+  box-shadow: 0 2px 10px rgba(16, 185, 129, 0.4);
+}
+
+.quest-nav-btn.next-btn:not(.disabled):hover {
+  background: #059669;
+  color: #ffffff;
+  border-color: #047857;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.6);
+}
+
+.quest-nav-btn.next-btn:not(.disabled):active {
+  transform: translateY(0);
+}
+
 .quest-nav-btn.disabled {
   opacity: 0.45;
   cursor: not-allowed;
+}
+
+.quest-nav-btn.next-btn.disabled {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-muted);
+  border-color: var(--border-color);
+  box-shadow: none;
 }
 
 /* Tab Views */

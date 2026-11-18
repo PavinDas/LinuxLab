@@ -38,6 +38,14 @@ export class Sanitizer {
       } else if (key.startsWith('on') && typeof val === 'function') {
         const eventName = key.slice(2).toLowerCase();
         el.addEventListener(eventName, val);
+      } else if (key === 'disabled') {
+        if (val) {
+          el.setAttribute('disabled', '');
+          el.disabled = true;
+        } else {
+          el.removeAttribute('disabled');
+          el.disabled = false;
+        }
       } else if (key === 'style' && typeof val === 'object') {
         Object.assign(el.style, val);
       } else {

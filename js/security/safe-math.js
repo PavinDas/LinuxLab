@@ -21,10 +21,12 @@ export class SafeMath {
         return { success: false, error: 'No tokens found' };
       }
       const parser = new MathParser(tokens);
-      const value = parser.parse();
+      let value = parser.parse();
       if (!Number.isFinite(value)) {
         return { success: false, error: 'Result is undefined or infinite' };
       }
+      // Eliminate IEEE-754 precision inaccuracies (e.g. 0.1 + 0.2 = 0.3)
+      value = parseFloat(Number(value).toPrecision(12));
       return { success: true, value };
     } catch (err) {
       return { success: false, error: err.message || 'Math evaluation error' };

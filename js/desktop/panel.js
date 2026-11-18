@@ -69,7 +69,7 @@ export class TopPanel {
     const userBtn = Sanitizer.createElement('button', {
       className: 'panel-btn user-btn',
       title: 'Kiddy User Profile',
-      onClick: () => this.launchCallback('settings')
+      onClick: () => this.launchCallback('settings', { section: 'user' })
     }, '👤 kiddy');
 
     rightSec.appendChild(themeBtn);

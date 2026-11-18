@@ -32,11 +32,11 @@
 }
 
 body.dark-theme {
-  --bg-primary: #211832;
-  --bg-surface: #33254c;
-  --bg-surface-translucent: rgba(51, 37, 76, 0.97);
-  --bg-panel: rgba(33, 24, 50, 0.96);
-  --bg-dock: rgba(51, 37, 76, 0.97);
+  --bg-primary: #18102a;
+  --bg-surface: #251a3d;
+  --bg-surface-translucent: rgba(37, 26, 61, 0.97);
+  --bg-panel: rgba(24, 16, 42, 0.96);
+  --bg-dock: rgba(37, 26, 61, 0.97);
   --border-color: rgba(182, 163, 255, 0.42);
   --text-primary: #fff8f4;
   --text-secondary: #e9dcf5;
@@ -47,8 +47,8 @@ body.dark-theme {
   --accent-orange: #ffc875;
   --accent-cyan: #69d7eb;
   --accent-danger: #ff7d99;
-  --win-titlebar-bg: #3b2a56;
-  --win-shadow: 0 22px 60px rgba(17, 10, 28, 0.48), 0 6px 18px rgba(17, 10, 28, 0.28);
+  --win-titlebar-bg: #2d1f47;
+  --win-shadow: 0 22px 60px rgba(17, 10, 28, 0.58), 0 6px 18px rgba(17, 10, 28, 0.38);
 }
 
 button,
@@ -692,6 +692,16 @@ body.dark-theme .app-dialog-danger {
   color: #fff0f7;
 }
 
+.terminal-container.theme-matrix {
+  background-color: #0d1a14;
+  color: #79f2af;
+}
+
+.terminal-container.theme-hacker-amber {
+  background-color: #291807;
+  color: #ffc470;
+}
+
 .terminal-toolbar {
   background-color: rgba(17, 14, 29, 0.32);
   border-bottom-color: rgba(255, 255, 255, 0.1);
@@ -703,9 +713,10 @@ body.dark-theme .app-dialog-danger {
   border-radius: 10px;
 }
 
-.terminal-prompt {
-  color: #9de8d0;
-}
+.terminal-container.theme-cyber-green .terminal-prompt { color: #9de8d0; }
+.terminal-container.theme-gnome-dark .terminal-prompt { color: #ffb5d4; }
+.terminal-container.theme-matrix .terminal-prompt { color: #79f2af; }
+.terminal-container.theme-hacker-amber .terminal-prompt { color: #ffc470; }
 
 .term-banner { color: #d5b9f1; }
 .term-stderr { color: #ffabbc; }
